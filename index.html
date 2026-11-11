@@ -1,0 +1,2157 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" href="data:,">
+<title>HR 대시보드 · 통로이미지</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script src="vendor/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg-sidebar:#14121F;
+  --bg-sidebar-hover:#1E1B30;
+  --bg-app:#F6F5FB;
+  --bg-card:#FFFFFF;
+  --border:#E7E4F2;
+  --purple:#7C5CFC;
+  --purple-deep:#5B3DE8;
+  --purple-soft:#EFEAFF;
+  --purple-glow:rgba(124,92,252,0.35);
+  --amber:#E8A33D;
+  --green:#1BA672;
+  --red:#E5484D;
+  --text-1:#1C1A29;
+  --text-2:#6E6B85;
+  --text-3:#A6A3BC;
+  --radius:14px;
+  --font: -apple-system, "Apple SD Gothic Neo", "Pretendard", "Malgun Gothic", "Segoe UI", system-ui, sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  font-family:var(--font);
+  background:var(--bg-app);
+  color:var(--text-1);
+  font-size:14px;
+  -webkit-font-smoothing:antialiased;
+}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:#D8D5E8;border-radius:8px;}
+.app{display:flex;min-height:100vh;}
+
+/* ---------- Sidebar ---------- */
+.sidebar{
+  width:236px;
+  flex-shrink:0;
+  background:linear-gradient(180deg,#14121F 0%,#181329 100%);
+  color:#fff;
+  padding:22px 14px;
+  display:flex;
+  flex-direction:column;
+  position:sticky;
+  top:0;
+  height:100vh;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:6px 10px 22px 10px;
+}
+.brand-mark{
+  width:32px;height:32px;border-radius:9px;
+  background:linear-gradient(135deg,var(--purple),var(--purple-deep));
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:14px;color:#fff;
+  box-shadow:0 0 0 1px rgba(255,255,255,0.06), 0 6px 16px var(--purple-glow);
+}
+.brand-text{line-height:1.25;}
+.brand-text .t1{font-size:13.5px;font-weight:700;letter-spacing:-0.2px;}
+.brand-text .t2{font-size:11px;color:#8E8AA8;}
+
+.nav{display:flex;flex-direction:column;gap:2px;margin-top:6px;}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;border-radius:10px;
+  color:#B6B2CC;font-size:13.5px;font-weight:500;
+  cursor:pointer;user-select:none;
+  transition:background .15s, color .15s;
+  border:1px solid transparent;
+}
+.nav-item .ic{width:18px;height:18px;flex-shrink:0;opacity:.85;}
+.nav-item:hover{background:var(--bg-sidebar-hover);color:#fff;}
+.nav-item.active{
+  background:rgba(124,92,252,0.16);
+  color:#fff;
+  border-color:rgba(124,92,252,0.4);
+}
+.nav-item.active .ic{opacity:1;}
+.nav-sub{
+  margin:14px 0 6px 0;
+  padding:0 12px;
+  font-size:10.5px;
+  letter-spacing:.06em;
+  color:#635F80;
+  font-weight:700;
+  text-transform:uppercase;
+}
+.sidebar-foot{
+  margin-top:auto;
+  padding:12px 12px 4px 12px;
+  border-top:1px solid rgba(255,255,255,0.08);
+  font-size:11px;
+  color:#65618A;
+  line-height:1.6;
+}
+
+/* ---------- Main ---------- */
+main{flex:1;min-width:0;display:flex;flex-direction:column;}
+.topbar{
+  position:sticky;top:0;z-index:20;
+  background:rgba(246,245,251,0.9);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--border);
+  padding:14px 28px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.topbar-row1{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.page-title{font-size:19px;font-weight:800;letter-spacing:-0.3px;}
+.page-sub{font-size:12.5px;color:var(--text-2);margin-top:2px;}
+
+.file-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 14px;border-radius:9px;
+  font-size:13px;font-weight:600;
+  border:1px solid var(--border);
+  background:#fff;color:var(--text-1);
+  cursor:pointer;transition:all .12s;
+  white-space:nowrap;
+}
+.btn:hover{border-color:var(--purple);color:var(--purple-deep);}
+.btn-primary{
+  background:linear-gradient(135deg,var(--purple),var(--purple-deep));
+  color:#fff;border:none;
+  box-shadow:0 4px 14px var(--purple-glow);
+}
+.btn-primary:hover{filter:brightness(1.06);color:#fff;}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--text-2);}
+.btn-ghost:hover{background:var(--purple-soft);color:var(--purple-deep);border-color:transparent;}
+.btn[disabled]{opacity:.45;cursor:not-allowed;pointer-events:none;}
+.btn svg{width:15px;height:15px;}
+
+.status-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:12px;font-weight:600;
+  padding:6px 10px;border-radius:20px;
+  background:#F0EEFB;color:var(--purple-deep);
+}
+.status-chip.ok{background:#E7F7F0;color:var(--green);}
+.status-chip .dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+
+.filter-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.filter-bar select, .filter-bar input[type=text]{
+  font-family:var(--font);
+  font-size:12.5px;font-weight:500;
+  padding:7px 10px;border-radius:8px;
+  border:1px solid var(--border);
+  background:#fff;color:var(--text-1);
+  min-width:110px;
+}
+.filter-bar label{font-size:11.5px;color:var(--text-3);font-weight:700;margin-right:-4px;text-transform:uppercase;letter-spacing:.03em;}
+
+.content{padding:22px 28px 60px 28px;flex:1;}
+.view{display:none;}
+.view.active{display:block;animation:fadein .18s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+/* ---------- Empty state ---------- */
+.empty-state{
+  max-width:560px;margin:60px auto;text-align:center;
+  padding:44px 36px;background:#fff;border-radius:20px;border:1px solid var(--border);
+}
+.empty-state .ic-wrap{
+  width:56px;height:56px;border-radius:16px;margin:0 auto 18px auto;
+  background:var(--purple-soft);display:flex;align-items:center;justify-content:center;
+}
+.empty-state h2{font-size:17px;margin:0 0 8px 0;}
+.empty-state p{font-size:13px;color:var(--text-2);line-height:1.7;margin:0 0 22px 0;}
+.empty-state .btn-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.note-box{
+  margin-top:22px;padding:12px 14px;border-radius:10px;background:#FAF9FE;
+  border:1px dashed var(--border);font-size:11.5px;color:var(--text-2);text-align:left;line-height:1.7;
+}
+
+/* ---------- Cards / KPI ---------- */
+.grid{display:grid;gap:16px;}
+.kpi-grid{grid-template-columns:repeat(auto-fit,minmax(190px,1fr));margin-bottom:18px;}
+.card{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:18px 18px;
+}
+.kpi-card{position:relative;overflow:hidden;}
+.kpi-label{font-size:12px;color:var(--text-2);font-weight:600;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
+.kpi-value{font-size:25px;font-weight:800;letter-spacing:-0.5px;font-variant-numeric:tabular-nums;}
+.kpi-value small{font-size:13px;font-weight:600;color:var(--text-2);}
+.kpi-delta{margin-top:6px;font-size:12px;font-weight:700;display:inline-flex;align-items:center;gap:3px;}
+.kpi-delta.up{color:var(--green);}
+.kpi-delta.down{color:var(--red);}
+.kpi-delta.flat{color:var(--text-3);}
+.kpi-delta.accent{color:var(--amber);font-size:13.5px;font-weight:800;}
+.accent-inline{color:var(--amber);font-weight:800;font-size:13.5px;}
+.kpi-value-compact{font-size:15px;font-weight:700;line-height:1.5;}
+.kpi-icon{
+  position:absolute;right:14px;top:14px;width:30px;height:30px;border-radius:9px;
+  background:var(--purple-soft);display:flex;align-items:center;justify-content:center;color:var(--purple-deep);
+}
+
+.section-title{font-size:14.5px;font-weight:800;margin:26px 0 12px 0;display:flex;align-items:center;justify-content:space-between;}
+.section-title .hint{font-size:11.5px;color:var(--text-3);font-weight:500;}
+.two-col{grid-template-columns:1.3fr 1fr;}
+.chart-card canvas{max-height:280px;}
+.chart-card h3{font-size:13px;margin:0 0 14px 0;font-weight:700;color:var(--text-1);}
+.chart-card .chart-wrap{position:relative;height:260px;}
+
+/* ---------- Tables ---------- */
+.table-wrap{overflow:auto;border:1px solid var(--border);border-radius:var(--radius);background:#fff;}
+table.data-table{border-collapse:collapse;width:100%;font-size:12.5px;white-space:nowrap;font-variant-numeric:tabular-nums;}
+table.data-table thead th{
+  position:sticky;top:0;background:#FAF9FE;color:var(--text-2);
+  text-align:left;padding:10px 12px;font-weight:700;font-size:11.5px;
+  border-bottom:1px solid var(--border);cursor:pointer;user-select:none;
+}
+table.data-table thead th:hover{color:var(--purple-deep);}
+table.data-table thead th .arrow{margin-left:4px;opacity:.5;}
+table.data-table tbody td{padding:9px 12px;border-bottom:1px solid #F1EFF9;color:var(--text-1);}
+table.data-table tbody tr:hover{background:#FAF8FF;}
+table.data-table tbody tr:last-child td{border-bottom:none;}
+.tag{
+  display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;
+  background:var(--purple-soft);color:var(--purple-deep);
+}
+/* 사업부별 상세 테이블: 헤더 가운데정렬 + 열 구분용 옅은 세로 테두리 */
+#tbl-division-summary thead th{ text-align:center; }
+#tbl-division-summary th, #tbl-division-summary td{ border-right:1px solid var(--border); }
+#tbl-division-summary th:last-child, #tbl-division-summary td:last-child{ border-right:none; }
+#tbl-laborcost thead th{ text-align:center; }
+#tbl-laborcost th, #tbl-laborcost td{ border-right:1px solid var(--border); }
+#tbl-laborcost th:last-child, #tbl-laborcost td:last-child{ border-right:none; }
+#tbl-salary-cl{ table-layout:fixed; }
+#tbl-salary-cl thead th{ text-align:center; }
+#tbl-salary-cl th, #tbl-salary-cl td{ border-right:1px solid var(--border); }
+#tbl-salary-cl th:last-child, #tbl-salary-cl td:last-child{ border-right:none; }
+#tbl-career thead th{ text-align:center; }
+#tbl-career th, #tbl-career td{ border-right:1px solid var(--border); }
+#tbl-career th:last-child, #tbl-career td:last-child{ border-right:none; }
+#tbl-active thead th{ text-align:center; }
+#tbl-active th, #tbl-active td{ border-right:1px solid var(--border); }
+#tbl-active th:last-child, #tbl-active td:last-child{ border-right:none; }
+#tbl-resigned thead th{ text-align:center; }
+#tbl-resigned th, #tbl-resigned td{ border-right:1px solid var(--border); }
+#tbl-resigned th:last-child, #tbl-resigned td:last-child{ border-right:none; }
+.tag.gray{background:#F1EFF7;color:var(--text-2);}
+.tag.red{background:#FCEBEC;color:var(--red);}
+.tag.green{background:#E7F7F0;color:var(--green);}
+
+.subtabs{display:flex;gap:6px;margin-bottom:14px;}
+.subtab{
+  padding:7px 14px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;
+  color:var(--text-2);border:1px solid var(--border);background:#fff;
+}
+.subtab.active{background:var(--purple);color:#fff;border-color:var(--purple);}
+
+.table-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:10px;flex-wrap:wrap;}
+.table-toolbar .search-box{position:relative;}
+.table-toolbar input[type=text]{
+  font-family:var(--font);padding:8px 12px 8px 32px;border-radius:9px;border:1px solid var(--border);
+  font-size:12.5px;width:220px;background:#fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="%23A6A3BC" stroke-width="2"><circle cx="6" cy="6" r="5"/><line x1="10" y1="10" x2="13" y2="13"/></svg>') no-repeat 10px center;
+}
+.table-meta{font-size:11.5px;color:var(--text-3);}
+
+.callout{
+  font-size:12px;color:var(--text-2);background:#FAF9FE;border:1px dashed var(--border);
+  border-radius:10px;padding:10px 14px;line-height:1.7;margin-bottom:14px;
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">HR</div>
+      <div class="brand-text">
+        <div class="t1">HR 대시보드</div>
+        <div class="t2">통로이미지(주) · 인사총무팀</div>
+      </div>
+    </div>
+
+    <div class="nav" id="nav">
+      <div class="nav-item active" data-view="dashboard">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        <span>대시보드</span>
+      </div>
+      <div class="nav-item" data-view="headcount">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17.5" cy="8.5" r="2.4"/><path d="M15.5 14.2c2.6.3 4.6 2.5 4.6 5.3"/></svg>
+        <span>인원 현황</span>
+      </div>
+      <div class="nav-item" data-view="laborcost">
+        <svg class="ic" viewBox="0 0 24 24" fill="none"><text x="12" y="17.5" font-size="15" font-weight="800" text-anchor="middle" fill="currentColor">&#8361;</text></svg>
+        <span>인건비</span>
+      </div>
+      <div class="nav-item" data-view="salary">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V10M11 19V5M18 19v-7"/><path d="M2 19h20"/></svg>
+        <span>연봉분석</span>
+      </div>
+      <div class="nav-item" data-view="career">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12l9-7 9 7-9 7-9-7Z"/><path d="M7 14.5V19c0 1 2.2 2 5 2s5-1 5-2v-4.5"/></svg>
+        <span>경력분석</span>
+      </div>
+
+      <div class="nav-sub">데이터</div>
+      <div class="nav-item" data-action="pick-file">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+        <span>폴더 선택</span>
+      </div>
+      <div class="nav-item" data-action="refresh">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4v5h5"/><path d="M20 20v-5h-5"/><path d="M5.3 9A7.5 7.5 0 0 1 19 8.3M18.7 15A7.5 7.5 0 0 1 5 15.7"/></svg>
+        <span>새로고침</span>
+      </div>
+    </div>
+
+    <div class="sidebar-foot">
+      기준일: <span id="sf-asof">-</span><br>
+      원본: <span id="sf-filename">파일 없음</span>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN ================= -->
+  <main>
+    <div class="topbar">
+      <div class="topbar-row1">
+        <div>
+          <div class="page-title" id="page-title">대시보드</div>
+          <div class="page-sub" id="page-sub">전체 임직원 현황 요약</div>
+        </div>
+        <div class="file-controls">
+          <span class="status-chip" id="status-chip"><span class="dot"></span><span id="status-text">파일 미연결</span></span>
+          <button class="btn" id="btn-sample">샘플 데이터 미리보기</button>
+          <button class="btn" id="btn-pick">폴더 선택</button>
+          <button class="btn btn-primary" id="btn-refresh" disabled>새로고침</button>
+        </div>
+      </div>
+      <div class="filter-bar" id="global-filter-bar" style="display:none;">
+        <label>기준월</label>
+        <select id="f-month"></select>
+        <label>사업부</label>
+        <select id="f-division"><option value="">전체</option></select>
+        <label>재직구분</label>
+        <select id="f-status">
+          <option value="all">전체</option>
+          <option value="active">재직자</option>
+          <option value="resigned">퇴직자</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ---- RECONNECT BANNER (저장된 폴더가 있으나 이번 세션엔 권한 재확인 필요) ---- -->
+      <div class="empty-state" id="reconnect-state" style="display:none;">
+        <div class="ic-wrap">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#5B3DE8" stroke-width="1.8"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+        </div>
+        <h2>이전에 연결한 폴더에 다시 접근할까요?</h2>
+        <p>브라우저 보안 정책상 폴더 접근 권한은 매 세션마다 다시 확인해야 합니다.<br>아래 버튼을 누르면 파일을 다시 찾을 필요 없이 바로 이어집니다.</p>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btn-reconnect">폴더 다시 연결하기</button>
+          <button class="btn" id="btn-pick-other">다른 폴더 선택</button>
+        </div>
+      </div>
+
+      <!-- ---- EMPTY STATE (shown before any file loaded) ---- -->
+      <div class="empty-state" id="empty-state">
+        <div class="ic-wrap">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#5B3DE8" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z"/><path d="M14 2v6h6"/></svg>
+        </div>
+        <h2>인사관리대장이 들어있는 폴더를 연결해주세요</h2>
+        <p>
+          <b>&#9733;인사관리대장</b>로 시작하는 xlsx 워크북이 들어있는 폴더를 선택하면, 그 안에서 가장 최근에 수정된 파일을 자동으로 찾아 읽습니다.<br>
+          매달 파일명이 바뀌어도(예: <code>&#9733;인사관리대장_260901</code> → <code>&#9733;인사관리대장_261001</code>) 다시 선택할 필요 없이 <b>[새로고침]</b>만 누르면 최신 파일을 자동으로 다시 찾습니다.
+        </p>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btn-pick-2">폴더 선택하기</button>
+          <button class="btn" id="btn-sample-2">샘플 데이터로 먼저 둘러보기</button>
+        </div>
+        <div class="note-box" id="fsapi-note">
+          크롬 또는 엣지에서 &laquo;폴더 선택&raquo; 버튼이 폴더 선택 창을 띄우고, 이후 새로고침 시 그 폴더 안에서 &laquo;&#9733;인사관리대장&raquo;으로 시작하는 xlsx 중 최신 파일을 자동으로 다시 찾습니다.
+          이 방식(File System Access API)은 크로미움 계열 브라우저(Chrome·Edge)에서만 지원되며 사파리에서는 지원되지 않습니다.
+          지원되지 않는 환경에서는 새로고침 시마다 폴더를 다시 선택하는 방식으로 자동 전환됩니다.
+        </div>
+      </div>
+
+      <!-- ================= VIEW: 대시보드 ================= -->
+      <div class="view" id="view-dashboard">
+        <div class="grid kpi-grid" id="kpi-grid-1"></div>
+        <div class="grid two-col" style="margin-bottom:16px;">
+          <div class="card chart-card">
+            <h3>월별 인원 · 인건비 추이 (최근 12개월)</h3>
+            <div class="chart-wrap"><canvas id="chart-headcount-cost"></canvas></div>
+          </div>
+          <div class="card chart-card">
+            <h3>근속연수 구간별 분포</h3>
+            <div class="chart-wrap"><canvas id="chart-tenure"></canvas></div>
+          </div>
+        </div>
+        <div class="grid two-col" style="margin-bottom:16px;">
+          <div class="card chart-card">
+            <h3>사업부별 인원 · 평균연봉</h3>
+            <div class="chart-wrap"><canvas id="chart-division"></canvas></div>
+          </div>
+          <div class="card chart-card">
+            <h3>성별 · 직책별 구성</h3>
+            <div style="display:flex; gap:12px;">
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:11.5px;color:var(--text-2);font-weight:700;margin-bottom:4px;text-align:center;">성별 구성</div>
+                <div class="chart-wrap" style="height:210px;"><canvas id="chart-gender"></canvas></div>
+              </div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:11.5px;color:var(--text-2);font-weight:700;margin-bottom:4px;text-align:center;">직책별 구성</div>
+                <div class="chart-wrap" style="height:210px;"><canvas id="chart-role"></canvas></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="section-title">사업부별 상세</div>
+        <div class="table-wrap"><table class="data-table" id="tbl-division-summary"></table></div>
+      </div>
+
+      <!-- ================= VIEW: 인원현황 ================= -->
+      <div class="view" id="view-headcount">
+        <div class="subtabs">
+          <div class="subtab active" data-sub="active">재직자 DB</div>
+          <div class="subtab" data-sub="resigned">퇴직자 DB</div>
+        </div>
+
+        <div id="headcount-active">
+          <div class="grid kpi-grid" id="kpi-grid-active"></div>
+          <div class="table-toolbar">
+            <div class="search-box"><input type="text" id="search-active" placeholder="이름·부서·직급 검색"></div>
+            <div class="table-meta" id="meta-active"></div>
+          </div>
+          <div class="table-wrap"><table class="data-table" id="tbl-active"></table></div>
+        </div>
+
+        <div id="headcount-resigned" style="display:none;">
+          <div class="grid kpi-grid" id="kpi-grid-resigned"></div>
+          <div class="grid two-col" style="margin-bottom:16px;">
+            <div class="card chart-card">
+              <h3>재직기간별 퇴직 비율</h3>
+              <div class="chart-wrap"><canvas id="chart-resign-type"></canvas></div>
+            </div>
+            <div class="card chart-card">
+              <h3>계약유형별 퇴직 비율</h3>
+              <div class="chart-wrap"><canvas id="chart-resign-contract"></canvas></div>
+            </div>
+          </div>
+          <div class="table-toolbar">
+            <div class="search-box"><input type="text" id="search-resigned" placeholder="이름·부서·직급 검색"></div>
+            <div class="table-meta" id="meta-resigned"></div>
+          </div>
+          <div class="table-wrap"><table class="data-table" id="tbl-resigned"></table></div>
+        </div>
+      </div>
+
+      <!-- ================= VIEW: 인건비 ================= -->
+      <div class="view" id="view-laborcost">
+        <div class="grid kpi-grid" id="kpi-grid-laborcost"></div>
+        <div class="card chart-card" style="margin-bottom:16px;">
+          <h3>월별 인건비 · 매출액 · B/A 비율 (2024~2026)</h3>
+          <div class="chart-wrap"><canvas id="chart-laborcost"></canvas></div>
+        </div>
+        <div class="section-title">월별 상세 테이블</div>
+        <div class="table-wrap"><table class="data-table" id="tbl-laborcost"></table></div>
+      </div>
+
+      <!-- ================= VIEW: 연봉분석 ================= -->
+      <div class="view" id="view-salary">
+        <div class="card chart-card" style="margin-bottom:16px;">
+          <h3>연봉 분위(1~10분위) 분포</h3>
+          <div class="chart-wrap"><canvas id="chart-salary-decile"></canvas></div>
+        </div>
+        <div class="card chart-card" style="margin-bottom:16px;">
+          <h3>CL(직급군)별 연봉 분포</h3>
+          <div class="chart-wrap"><canvas id="chart-salary-cl-range"></canvas></div>
+        </div>
+        <div class="table-wrap"><table class="data-table" id="tbl-salary-cl"></table></div>
+      </div>
+
+      <!-- ================= VIEW: 경력분석 ================= -->
+      <div class="view" id="view-career">
+        <div class="grid two-col" style="margin-bottom:16px;">
+          <div class="card chart-card">
+            <h3>합산경력(이전경력+재직기간) 구간 분포</h3>
+            <div class="chart-wrap"><canvas id="chart-career-dist"></canvas></div>
+          </div>
+          <div class="card chart-card">
+            <h3>CL별 평균 합산경력</h3>
+            <div class="chart-wrap"><canvas id="chart-career-cl"></canvas></div>
+          </div>
+        </div>
+        <div class="section-title">재직자 개인별 경력 상세</div>
+        <div class="table-toolbar">
+          <div class="search-box"><input type="text" id="search-career" placeholder="이름·부서·직급 검색"></div>
+          <div class="table-meta" id="meta-career"></div>
+        </div>
+        <div class="table-wrap"><table class="data-table" id="tbl-career"></table></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+'use strict';
+/* =========================================================================
+   HR 대시보드 프로토타입 — 통로이미지(주) 인사총무팀
+   - 원본 워크북(인사관리대장_260901.xlsx)을 브라우저 내에서만 파싱 (외부 전송 없음)
+   - File System Access API 사용 가능 시: 최초 1회 선택 후 새로고침만으로 재조회
+   - 미지원 환경(예: Safari)에서는 새로고침 시 파일 재선택으로 자동 전환
+   ========================================================================= */
+
+const $  = (sel, root) => (root||document).querySelector(sel);
+const $$ = (sel, root) => Array.from((root||document).querySelectorAll(sel));
+
+/* ----------------------------- 공통 유틸 ----------------------------- */
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function norm(s){ return String(s==null?'':s).replace(/\s+/g,'').toLowerCase(); }
+function toNumber(v){
+  if(v===null || v===undefined || v==='') return null;
+  if(typeof v==='number') return isFinite(v)? v : null;
+  const s=String(v).replace(/[,원%\s]/g,'').replace(/^\+/,'');
+  if(s==='' || s==='-') return null;
+  const n=parseFloat(s);
+  return isNaN(n)? null : n;
+}
+function toDateSafe(v){
+  if(v && Object.prototype.toString.call(v)==='[object Date]' && !isNaN(v)){
+    // 엑셀 파서 버전·시간대에 따라 날짜 셀이 자정보다 몇십 초 이르게(전날 23:59:08 등) 읽히는 경우가 있어,
+    // 1시간 여유를 두고 해당 '날짜'의 현지 자정으로 맞춘다 (인사 데이터의 날짜는 모두 일 단위).
+    const t = new Date(v.getTime()+3600000);
+    return new Date(t.getFullYear(), t.getMonth(), t.getDate());
+  }
+  if(typeof v==='number' && isFinite(v)){
+    const d = new Date(Date.UTC(1899,11,30) + Math.round(v)*86400000);
+    return isNaN(d)? null : d;
+  }
+  if(typeof v==='string' && v.trim()!==''){
+    const s=v.trim().replace(/\./g,'-').replace(/\-$/,'');
+    const d = new Date(s);
+    return isNaN(d)? null : d;
+  }
+  return null;
+}
+function median(arr){
+  const s = arr.filter(v=>v!=null).slice().sort((a,b)=>a-b);
+  const n = s.length;
+  if(!n) return null;
+  const mid = Math.floor(n/2);
+  return n%2 ? s[mid] : (s[mid-1]+s[mid])/2;
+}
+function mean(arr){
+  const s = arr.filter(v=>v!=null);
+  if(!s.length) return null;
+  return s.reduce((a,b)=>a+b,0)/s.length;
+}
+function fmtWon(n){
+  if(n==null || isNaN(n)) return '-';
+  // 값이 억 단위로 매우 크면(>=1e5, 즉 만원 단위 저장 추정) 그대로, 아니면 원 단위 콤마 표기
+  return Math.round(n).toLocaleString('ko-KR');
+}
+function fmtPct(n, digits){
+  if(n==null || isNaN(n)) return '-';
+  return n.toFixed(digits==null?1:digits)+'%';
+}
+function fmtInt(n){
+  if(n==null || isNaN(n)) return '-';
+  return Math.round(n).toLocaleString('ko-KR');
+}
+function fmtDate(d){
+  if(!d) return '-';
+  const dt = (d instanceof Date)? d : toDateSafe(d);
+  if(!dt) return String(d);
+  return dt.getFullYear()+'.'+String(dt.getMonth()+1).padStart(2,'0')+'.'+String(dt.getDate()).padStart(2,'0');
+}
+// 보직자: 직책이 '프로'(개인 기여자)가 아니면 보직자로 간주 (대표이사·본부장·사업부장·실장·팀장 등 임원 포함)
+function hasRole(title){ const t=String(title||'').trim(); return t!=='' && t!=='프로'; }
+function isMale(g){ const s=String(g||'').trim(); return s==='남' || s==='남성' || s.toLowerCase()==='m'; }
+function isFemale(g){ const s=String(g||'').trim(); return s==='여' || s==='여성' || s.toLowerCase()==='f'; }
+
+// 임원 판별: 1) 임원구분 컬럼 값이 '임원'류이면 그것을 신뢰, 2) 컬럼이 비어있을 때만 직급/직책 텍스트로 보조 판별
+const EXEC_TEXT_KEYWORDS = ['대표이사','부사장','전무','상무','회장','임원'];
+const EXEC_POSITIVE_VALUES = ['임원','등기임원','비등기임원'];
+const EXEC_NEGATIVE_VALUES = ['직원','일반','일반직','해당없음','비임원','n','x','아니오','no','-','none'];
+function isExecutive(e){
+  const execCol = e.execType!=null ? String(e.execType).trim() : '';
+  if(execCol!==''){
+    const lc = execCol.toLowerCase();
+    if(EXEC_NEGATIVE_VALUES.includes(lc)) return false;
+    if(EXEC_POSITIVE_VALUES.some(v=>execCol.includes(v))) return true;
+    // 임원구분 컬럼에 다른 텍스트가 들어온 경우(예: '휴직'처럼 무관한 값)엔 판단 보류 → 직급/직책 텍스트로 보조 판별
+  }
+  const combined = String(e.rank||'')+' '+String(e.title||'');
+  return EXEC_TEXT_KEYWORDS.some(k=>combined.includes(k));
+}
+// 여러 임원 직급(이사/상무/전무/대표이사 등)을 하나의 "임원" 그룹으로 통합
+function effectiveRank(e){ return isExecutive(e) ? '임원' : (e.rank || '(미지정)'); }
+
+
+/* -------------------------- 헤더/컬럼 자동 인식 -------------------------- */
+function buildColMap(headerRow, fieldCandidates){
+  const headers = (headerRow||[]).map(norm);
+  const used = new Set();
+  const map = {};
+  // 1) 정확 일치 우선
+  for(const field in fieldCandidates){
+    for(const cand of fieldCandidates[field]){
+      const nc = norm(cand);
+      const idx = headers.findIndex((h,i)=> h && h===nc && !used.has(i));
+      if(idx>-1){ map[field]=idx; used.add(idx); break; }
+    }
+  }
+  // 2) 부분 일치 보완: 헤더 접두(prefix) 일치를 최우선으로, 그 다음 포함(substring) 일치 (긴 후보어 우선).
+  //    필드 선언 순서가 아니라 전역으로 가장 적합한 매칭부터 배정한다 — 예: '최종연봉(원)' 헤더는
+  //    salary 필드의 '연봉(원)'(중간 포함일치)보다 finalSalary 필드의 '최종연봉'(접두일치)이 우선해야 함.
+  const scored = [];
+  for(const field in fieldCandidates){
+    if(map[field]!==undefined) continue;
+    fieldCandidates[field].forEach(cand=>{
+      const nc = norm(cand);
+      if(!nc || nc.length<2) return;
+      headers.forEach((h,i)=>{
+        if(used.has(i) || !h) return;
+        if(h.includes(nc) || nc.includes(h)){
+          const isPrefix = h.startsWith(nc) || nc.startsWith(h);
+          scored.push({field, idx:i, len:nc.length, isPrefix});
+        }
+      });
+    });
+  }
+  scored.sort((a,b)=> (b.isPrefix - a.isPrefix) || (b.len - a.len));
+  for(const s of scored){
+    if(map[s.field]!==undefined || used.has(s.idx)) continue;
+    map[s.field]=s.idx; used.add(s.idx);
+  }
+  return map;
+}
+function detectHeader(aoa, fieldCandidates){
+  let bestRow=0, bestScore=-1, bestMap={};
+  for(let r=0;r<Math.min(aoa.length,12);r++){
+    const map = buildColMap(aoa[r]||[], fieldCandidates);
+    const score = Object.keys(map).length;
+    if(score>bestScore){ bestScore=score; bestRow=r; bestMap=map; }
+  }
+  return { headerRowIdx: bestRow, colMap: bestMap, score: bestScore };
+}
+function rowsFromAoa(aoa, headerRowIdx, colMap){
+  const out=[];
+  for(let r=headerRowIdx+1;r<aoa.length;r++){
+    const row=aoa[r];
+    if(!row || row.every(c=>c===undefined||c===null||String(c).trim()==='')) continue;
+    const obj={};
+    for(const f in colMap) obj[f]=row[colMap[f]];
+    out.push(obj);
+  }
+  return out;
+}
+function findSheet(wb, candidates){
+  const names = wb.SheetNames;
+  for(const cand of candidates){
+    const hit = names.find(n=>norm(n)===norm(cand));
+    if(hit) return hit;
+  }
+  for(const cand of candidates){
+    const nc=norm(cand);
+    const hit = names.find(n=>{ const nn=norm(n); return nn.includes(nc)||nc.includes(nn); });
+    if(hit) return hit;
+  }
+  return null;
+}
+
+/* ------------------------------ 컬럼 후보어 ------------------------------ */
+const EMP_FIELDS = {
+  name:        ['성명','이름'],
+  status:      ['재직여부'],
+  division:    ['사업부명','사업부'],
+  dept:        ['부서명','부서'],
+  gender:      ['성별'],
+  title:       ['직책'],
+  rank:        ['직급(CL)','직급','CL'],
+  execType:    ['임원구분','임원여부'],
+  birth:       ['생년월일'],
+  age:         ['나이','연령'],
+  hireDate:    ['입사일자','입사일'],
+  tenureText:  ['재직기간'],
+  tenureMonths:['근속개월','근속월수'],
+  contractType:['계약유형','고용형태'],
+  contractTerm:['계약기간'],
+  salary:      ['연봉','연간급여','연봉(원)'],
+  salaryRank:  ['연봉순위'],
+  priorCareer: ['이전경력','전직장경력']
+};
+const RETIREE_FIELDS = Object.assign({}, EMP_FIELDS, {
+  resignDate:  ['퇴사일자','퇴직일자'],
+  resignType:  ['퇴직유형','퇴직구분'],
+  finalSalary: ['최종연봉'],
+  memo:        ['기타','퇴직사유','비고']
+});
+
+/* --------------------------------- 상태 --------------------------------- */
+const state = {
+  wb: null,
+  fileHandle: null,
+  usingFSApi: false,
+  usingSample: false,
+  fileName: '',
+  asOf: new Date(),
+  employees: [],
+  retirees: [],
+  laborCost: [],
+  divisions: [],
+  months: [],
+  filters: { division:'', month:'', status:'all' }
+};
+
+/* ============================ 워크북 파싱 ============================ */
+async function parseWorkbookFromArrayBuffer(buf, fileName){
+  const wb = XLSX.read(buf, { type:'array', cellDates:true });
+  state.wb = wb;
+  state.fileName = fileName || '';
+  state.usingSample = false;
+
+  // 재직자/퇴직자 시트의 나이·근속 폴백 계산에 쓰이므로, 워크북의 "기준일" 셀을 먼저 찾아 반영
+  const foundAsOf = findAsOfDate(wb);
+  state.asOf = foundAsOf || new Date();
+  state.asOfIsFromWorkbook = !!foundAsOf;
+
+  const activeSheetName   = findSheet(wb, ['재직자DB','재직자']);
+  const resignedSheetName = findSheet(wb, ['퇴직자DB','퇴직자']);
+  const laborSheetName    = findSheet(wb, ['인건비']);
+  const salarySheetName   = findSheet(wb, ['연봉분석']);
+  const careerSheetName   = findSheet(wb, ['경력분석']);
+
+  state.employees = activeSheetName ? parseEmployeeSheet(wb.Sheets[activeSheetName], EMP_FIELDS) : [];
+  state.retirees  = resignedSheetName ? parseEmployeeSheet(wb.Sheets[resignedSheetName], RETIREE_FIELDS) : [];
+  state.laborCost = laborSheetName ? parseLaborSheet(wb.Sheets[laborSheetName]) : [];
+
+  state.salaryDetailed = salarySheetName ? parseSalarySheetDetailed(wb.Sheets[salarySheetName]) : null;
+  state.careerDetailed = careerSheetName ? parseCareerSheetDetailed(wb.Sheets[careerSheetName]) : null;
+
+  state.missingSheets = [];
+  if(!activeSheetName) state.missingSheets.push('재직자DB');
+  if(!resignedSheetName) state.missingSheets.push('퇴직자DB');
+  if(!laborSheetName) state.missingSheets.push('인건비');
+  if(!salarySheetName) state.missingSheets.push('연봉분석');
+  if(!careerSheetName) state.missingSheets.push('경력분석');
+  if(laborSheetName && state.laborCost.length===0) state.missingSheets.push('인건비(블록 인식 실패)');
+
+  finalizeState();
+}
+function parseEmployeeSheet(ws, fields){
+  const aoa = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
+  const { headerRowIdx, colMap } = detectHeader(aoa, fields);
+  const rows = rowsFromAoa(aoa, headerRowIdx, colMap);
+  return rows.map(r=>{
+    const asOf = state.asOf;
+    const birth = toDateSafe(r.birth);
+    const hireDate = toDateSafe(r.hireDate);
+    const resignDate = toDateSafe(r.resignDate);
+    let age = toNumber(r.age);
+    if(age==null && birth){
+      age = asOf.getFullYear()-birth.getFullYear() - ((asOf.getMonth()<birth.getMonth()||(asOf.getMonth()===birth.getMonth()&&asOf.getDate()<birth.getDate()))?1:0);
+    }
+    let tenureMonths = toNumber(r.tenureMonths);
+    if(tenureMonths==null && hireDate){
+      const end = resignDate || asOf;
+      tenureMonths = (end.getFullYear()-hireDate.getFullYear())*12 + (end.getMonth()-hireDate.getMonth());
+    }
+    return {
+      name: r.name ?? null,
+      status: r.status ?? null,
+      division: r.division ? String(r.division).trim() : '(미지정)',
+      dept: r.dept ? String(r.dept).trim() : '',
+      gender: r.gender ?? null,
+      title: r.title ?? null,
+      rank: r.rank ?? null,
+      execType: r.execType ?? null,
+      birth, age,
+      hireDate, resignDate,
+      tenureMonths,
+      tenureText: r.tenureText ?? null,
+      contractType: r.contractType ?? null,
+      contractTerm: r.contractTerm ?? null,
+      salary: toNumber(r.salary),
+      salaryRank: toNumber(r.salaryRank),
+      priorCareerMonths: parseCareerToMonths(r.priorCareer),
+      priorCareerRaw: r.priorCareer ?? null,
+      resignType: r.resignType ?? null,
+      finalSalary: toNumber(r.finalSalary),
+      memo: r.memo ?? null
+    };
+  });
+}
+function parseCareerToMonths(v){
+  if(v==null || v==='') return 0;
+  if(typeof v==='number') return Math.round(v*12); // 연 단위 숫자로 저장된 경우 가정
+  const s=String(v);
+  const y = /(\d+)\s*년/.exec(s);
+  const m = /(\d+)\s*개?월/.exec(s);
+  if(y||m) return (y?parseInt(y[1],10)*12:0) + (m?parseInt(m[1],10):0);
+  const n = toNumber(s);
+  return n!=null ? Math.round(n*12) : 0;
+}
+/* 인건비 시트 전용 파서
+   실제 시트 구조: "  인건비 (천원)" / "  인원 (명)" / "  매출액 (천원)" 등 제목이 B열에 있고,
+   바로 아래 행에 '연도' | '1월'..'12월' | '합계(또는 평균)' 헤더, 그 아래로 연도별 데이터 행이 이어지는
+   가로형(피벗) 시계열 블록이 여러 개 세로로 쌓인 형태. 헤더명 매칭이 아니라 블록 위치 탐색 방식으로 파싱한다. */
+function findBlockAnchor(aoa, mustIncludeAll, mustExcludeAny){
+  for(let r=0;r<aoa.length;r++){
+    const cell = aoa[r] ? aoa[r][0] : null; // 시트 range가 B열부터 시작하므로 블록 제목은 배열 index0
+    if(cell==null) continue;
+    const t = String(cell).trim();
+    if(!t) continue;
+    if(mustIncludeAll.every(k=>t.includes(k)) && !mustExcludeAny.some(k=>t.includes(k))) return r;
+  }
+  return -1;
+}
+function parseYearMonthBlock(aoa, anchorRow){
+  // anchorRow+1 = 헤더 행('연도' | 1월..12월 | 합계), anchorRow+2부터 연도별 데이터 행
+  const out = {};
+  let r = anchorRow+2;
+  while(r < aoa.length){
+    const row = aoa[r];
+    if(!row){ break; }
+    const yStr = row[0]==null? '' : String(row[0]).trim();
+    const yNum = parseInt(yStr,10);
+    if(!yStr || isNaN(yNum) || yNum<2000 || yNum>2100) break; // '전년대비' 행/빈 행에서 중단
+    const months = [];
+    for(let m=0;m<12;m++) months.push(toNumber(row[1+m]));
+    out[yNum] = months;
+    r++;
+  }
+  return out;
+}
+function parseMemoBlock(aoa, anchorRow){
+  // "인건비 증감사유" 블록: anchorRow+1 = [연도, 1월..12월], anchorRow+2 = ['월별사유', 월별 텍스트...]
+  const headerRow = aoa[anchorRow+1] || [];
+  const year = parseInt(String(headerRow[0]||'').trim(), 10);
+  const memoRow = aoa[anchorRow+2] || [];
+  const out = {};
+  if(!isNaN(year)){
+    out[year] = {};
+    for(let m=0;m<12;m++){
+      const v = memoRow[1+m];
+      if(v!=null && String(v).trim()!=='') out[year][m+1] = String(v).trim();
+    }
+  }
+  return out;
+}
+function parseLaborSheet(ws){
+  const aoa = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
+
+  const costAnchor    = findBlockAnchor(aoa, ['인건비'], ['인당','증감사유']);
+  const headAnchor     = findBlockAnchor(aoa, ['인원'], ['인당']);
+  const revenueAnchor = findBlockAnchor(aoa, ['매출액'], ['누적']);
+  const memoAnchor    = findBlockAnchor(aoa, ['인건비','증감사유'], []);
+
+  const costData   = costAnchor>-1 ? parseYearMonthBlock(aoa, costAnchor) : {};
+  const headData   = headAnchor>-1 ? parseYearMonthBlock(aoa, headAnchor) : {};
+  const revenueData= revenueAnchor>-1 ? parseYearMonthBlock(aoa, revenueAnchor) : {};
+  const memoData   = memoAnchor>-1 ? parseMemoBlock(aoa, memoAnchor) : {};
+
+  state.laborCostBlocksFound = {
+    인건비: costAnchor>-1, 인원: headAnchor>-1, 매출액: revenueAnchor>-1
+  };
+
+  const years = new Set([...Object.keys(costData), ...Object.keys(headData), ...Object.keys(revenueData)].map(Number));
+  const rows=[];
+  Array.from(years).sort((a,b)=>a-b).forEach(year=>{
+    for(let m=1;m<=12;m++){
+      const cost = costData[year] ? costData[year][m-1] : null;      // 실측: 블록 제목은 "(천원)"이나 실제 셀 값은 원 단위 (요약표 누적치와 대조 확인)
+      const headcount = headData[year] ? headData[year][m-1] : null; // 단위: 명
+      const revenue = revenueData[year] ? revenueData[year][m-1] : null; // 실측: 원 단위
+      if(cost==null && headcount==null && revenue==null) continue;
+      rows.push({
+        year, month:m,
+        cost: cost,
+        headcount: headcount,
+        revenue: revenue,
+        memo: (memoData[year] && memoData[year][m]) || null
+      });
+    }
+  });
+  return rows.sort((a,b)=> a.year-b.year || a.month-b.month);
+}
+
+/* 워크북 내 "기준일" 셀 탐색 (재직자DB/HR대시보드(현황)/인건비 등 상단 어딘가에 "기준일: YYYY-MM-DD" 형태로 존재) */
+function findAsOfDate(wb){
+  const sheetCandidates = ['재직자DB','HR대시보드(현황)','인건비','퇴직자DB'];
+  for(const cand of sheetCandidates){
+    const sheetName = findSheet(wb, [cand]);
+    if(!sheetName) continue;
+    const aoa = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {header:1, defval:null});
+    for(let r=0;r<Math.min(aoa.length,8);r++){
+      const row = aoa[r]||[];
+      for(let c=0;c<row.length;c++){
+        const cell = row[c];
+        if(cell==null) continue;
+        const t = String(cell).trim().replace(/[:\s]/g,'');
+        if(t.includes('기준일')){
+          for(let c2=c+1;c2<row.length;c2++){
+            const d = toDateSafe(row[c2]);
+            if(d) return d;
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+/* ===================== 연봉분석 / 경력분석 시트 전용 파서 =====================
+   두 시트 모두 "제목행(B열, 예: '  1. CL별 연봉 현황 (직원 기준, 단위: 만원)')" 아래에
+   '구분' 헤더 행과 지표별 데이터 행이 이어지는 하위 블록이 여러 개 쌓인 구조.
+   재직자DB에서 근사 계산하는 대신, 회사가 이미 산출해 둔 이 표를 직접 읽어 정확도를 높인다. */
+function colIndexByHeader(headerRow, name){
+  const idx = headerRow.findIndex(h=> h!=null && String(h).trim()===name);
+  if(idx>-1) return idx;
+  return headerRow.findIndex(h=> h!=null && String(h).trim().replace(/\s+/g,'').includes(norm(name)));
+}
+function parseSalarySheetDetailed(ws){
+  const aoa = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
+  const result = { rankRows:null, deciles:null };
+
+  const clAnchor = findBlockAnchor(aoa, ['CL별','연봉','현황'], []);
+  if(clAnchor>-1){
+    const headerRow = aoa[clAnchor+1] || [];
+    const clCols = [];
+    for(let c=1;c<headerRow.length;c++){
+      const v = headerRow[c];
+      if(v==null || String(v).trim()==='') break;
+      clCols.push({ idx:c, label:String(v).trim() });
+    }
+    if(clCols.length){
+      const metrics = {};
+      let r = clAnchor+2;
+      let lastMetric = null;
+      const METRIC_KEYS = ['인원수','최소','최대','평균','중앙값','Range','중첩률'];
+      while(r<aoa.length){
+        const row = aoa[r];
+        if(!row) break;
+        const rawLabel = row[0]==null? '' : String(row[0]).trim().replace(/\s+/g,'');
+        if(!rawLabel){
+          if(lastMetric==='최소' || lastMetric==='최대'){
+            metrics[lastMetric+'_성명'] = clCols.map(c=> row[c.idx]!=null? String(row[c.idx]).trim() : null);
+          }
+          lastMetric = null; r++; continue; // 최소/최대 아래 성명 부속 행 처리
+        }
+        const known = METRIC_KEYS.find(k=>rawLabel.includes(k));
+        if(!known) break; // 다음 블록 제목 등에 도달하면 중단
+        metrics[known] = clCols.map(c=>toNumber(row[c.idx]));
+        lastMetric = known;
+        r++;
+      }
+      if(metrics['인원수']){
+        const toWon = v => v==null? null : v*10000; // 만원 → 원
+        result.rankRows = clCols.map((c,i)=>({
+          rank: c.label,
+          count: metrics['인원수'][i],
+          min: toWon(metrics['최소'] ? metrics['최소'][i] : null),
+          minName: metrics['최소_성명'] ? metrics['최소_성명'][i] : null,
+          max: toWon(metrics['최대'] ? metrics['최대'][i] : null),
+          maxName: metrics['최대_성명'] ? metrics['최대_성명'][i] : null,
+          avg: toWon(metrics['평균'] ? metrics['평균'][i] : null),
+          median: toWon(metrics['중앙값'] ? metrics['중앙값'][i] : null),
+          range: metrics['Range'] ? metrics['Range'][i]*100 : null,
+          overlap: metrics['중첩률'] ? metrics['중첩률'][i]*100 : null
+        }));
+      }
+    }
+  }
+
+  const decileAnchor = findBlockAnchor(aoa, ['분위별'], []);
+  if(decileAnchor>-1){
+    const deciles=[];
+    let r = decileAnchor+2;
+    while(r<aoa.length){
+      const row = aoa[r];
+      if(!row) break;
+      const d = parseInt(row[0],10);
+      if(isNaN(d) || d<1 || d>30) break;
+      deciles.push({ label:d+'분위', decile:d, lo:(toNumber(row[1])||0)*10000, hi:(toNumber(row[2])||0)*10000 });
+      r++;
+    }
+    if(deciles.length) result.deciles = deciles.sort((a,b)=>a.decile-b.decile);
+  }
+  return result;
+}
+function parseCareerSheetDetailed(ws){
+  const aoa = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
+  const result = { buckets:null, detailRows:null };
+
+  const distAnchor = findBlockAnchor(aoa, ['CL별','합산경력','분포'], []);
+  if(distAnchor>-1){
+    const headerRow = aoa[distAnchor+1] || [];
+    const clCols=[]; let totalColIdx=-1;
+    for(let c=1;c<headerRow.length;c++){
+      const v = headerRow[c]==null? '' : String(headerRow[c]).trim();
+      if(!v) break;
+      if(v==='계'){ totalColIdx=c; break; }
+      clCols.push({idx:c, label:v});
+    }
+    const rows=[];
+    let r = distAnchor+2;
+    while(r<aoa.length){
+      const row = aoa[r];
+      if(!row) break;
+      const label = row[0]==null? '' : String(row[0]).trim();
+      if(!label) break;
+      const byCL = clCols.map(c=>toNumber(row[c.idx])||0);
+      const total = totalColIdx>-1 ? (toNumber(row[totalColIdx])||0) : byCL.reduce((a,b)=>a+b,0);
+      rows.push({ label, total, byCL });
+      r++;
+    }
+    if(rows.length) result.buckets = rows.reverse(); // 시트는 20년이상→1년미만 순, 화면은 반대로
+  }
+
+  const detailAnchor = findBlockAnchor(aoa, ['재직자','경력','현황'], []);
+  if(detailAnchor>-1){
+    const headerRow = aoa[detailAnchor+1] || [];
+    const col = {
+      name: colIndexByHeader(headerRow,'이름'),
+      rank: colIndexByHeader(headerRow,'CL'),
+      priorMonths: colIndexByHeader(headerRow,'이전경력(개월)'),
+      tenureMonths: colIndexByHeader(headerRow,'재직기간(개월)'),
+      totalMonths: colIndexByHeader(headerRow,'총경력(개월)'),
+      bucket: colIndexByHeader(headerRow,'경력구간')
+    };
+    const rows=[];
+    let r = detailAnchor+2;
+    while(r<aoa.length){
+      const row = aoa[r];
+      if(!row) break;
+      const name = col.name>-1? row[col.name] : null;
+      if(name==null || String(name).trim()==='') break;
+      rows.push({
+        name: String(name).trim(),
+        rank: col.rank>-1? row[col.rank] : null,
+        priorMonths: col.priorMonths>-1? toNumber(row[col.priorMonths]) : null,
+        tenureMonths: col.tenureMonths>-1? toNumber(row[col.tenureMonths]) : null,
+        totalMonths: col.totalMonths>-1? toNumber(row[col.totalMonths]) : null,
+        bucket: col.bucket>-1? row[col.bucket] : null
+      });
+      r++;
+    }
+    if(rows.length) result.detailRows = rows;
+  }
+  return result;
+}
+
+/* ============================== 샘플 데이터 ============================== */
+function generateSampleData(){
+  state.usingSample = true;
+  state.fileName = '샘플 데이터 (실제 파일 아님)';
+  state.asOf = new Date();
+  state.asOfIsFromWorkbook = false;
+  const divisions = [
+    {name:'전략기획', depts:['경영전략팀','인사총무팀']},
+    {name:'IT개발', depts:['플랫폼개발팀','인프라팀']},
+    {name:'운영지원', depts:['CS운영팀','콘텐츠운영팀']},
+    {name:'그래픽사업부', depts:['그래픽제작팀','그래픽MD팀']},
+    {name:'사진사업부', depts:['사진제작팀','사진MD팀']}
+  ];
+  const ranks = ['CL1','CL2','CL3','CL4','CL5'];
+  const rankBase = {CL1:38000000, CL2:46000000, CL3:56000000, CL4:70000000, CL5:88000000};
+  const titles = ['사원','주임','대리','과장','차장','팀장'];
+  const contractTypes = ['정규직','정규직','정규직','계약직','시용직'];
+  const asOf = state.asOf;
+  const emps=[];
+  let n=1;
+  divisions.forEach(div=>{
+    const cnt = 14 + Math.floor(Math.random()*10);
+    for(let i=0;i<cnt;i++){
+      const rank = ranks[Math.min(4, Math.floor(Math.random()*Math.random()*5))];
+      const gender = Math.random()<0.52?'여':'남';
+      const hireYear = 2013 + Math.floor(Math.random()*13);
+      const hireMonth = 1+Math.floor(Math.random()*12);
+      const hireDate = new Date(hireYear, hireMonth-1, 1+Math.floor(Math.random()*27));
+      const birthYear = hireYear - (23 + Math.floor(Math.random()*15));
+      const birth = new Date(birthYear, Math.floor(Math.random()*12), 1+Math.floor(Math.random()*27));
+      const tenureMonths = (asOf.getFullYear()-hireDate.getFullYear())*12 + (asOf.getMonth()-hireDate.getMonth());
+      const isRole = Math.random()<0.16;
+      const title = isRole ? (Math.random()<0.75?'팀장':'실장') : titles[Math.floor(Math.random()*titles.length)];
+      const priorMonths = Math.floor(Math.random()*84);
+      const salary = Math.round((rankBase[rank] * (0.9+Math.random()*0.35))/100000)*100000;
+      emps.push({
+        name: '직원'+String(n++).padStart(3,'0'),
+        division: div.name,
+        dept: div.depts[Math.floor(Math.random()*div.depts.length)],
+        gender, title, rank,
+        execType: null,
+        birth, age: asOf.getFullYear()-birth.getFullYear(),
+        hireDate, resignDate:null,
+        tenureMonths,
+        tenureText: null,
+        contractType: contractTypes[Math.floor(Math.random()*contractTypes.length)],
+        contractTerm: null,
+        salary, salaryRank: null,
+        priorCareerMonths: priorMonths,
+        priorCareerRaw: null,
+        resignType: null, finalSalary: null, memo: null
+      });
+    }
+  });
+  state.employees = emps;
+
+  const resignTypes = ['자발','자발','비자발'];
+  const retirees=[];
+  for(let i=0;i<26;i++){
+    const div = divisions[Math.floor(Math.random()*divisions.length)];
+    const rank = ranks[Math.floor(Math.random()*ranks.length)];
+    const hireYear = 2016 + Math.floor(Math.random()*8);
+    const hireDate = new Date(hireYear, Math.floor(Math.random()*12), 1);
+    const resignYear = Math.min(2026, hireYear + 1 + Math.floor(Math.random()*5));
+    const resignMonth = 1+Math.floor(Math.random()*12);
+    const resignDate = new Date(resignYear, resignMonth-1, 15);
+    const tenureMonths = (resignDate.getFullYear()-hireDate.getFullYear())*12 + (resignDate.getMonth()-hireDate.getMonth());
+    retirees.push({
+      name: '전직원'+String(i+1).padStart(2,'0'),
+      division: div.name,
+      dept: div.depts[Math.floor(Math.random()*div.depts.length)],
+      gender: Math.random()<0.5?'여':'남',
+      title: Math.random()<0.1?'팀장':'사원',
+      rank,
+      execType:null,
+      birth:null, age: 26+Math.floor(Math.random()*20),
+      hireDate, resignDate,
+      tenureMonths,
+      tenureText:null,
+      contractType: contractTypes[Math.floor(Math.random()*contractTypes.length)],
+      contractTerm:null,
+      salary: null,
+      salaryRank:null,
+      priorCareerMonths: Math.floor(Math.random()*60),
+      priorCareerRaw:null,
+      resignType: resignTypes[Math.floor(Math.random()*resignTypes.length)],
+      finalSalary: Math.round((rankBase[rank]*(0.9+Math.random()*0.3))/100000)*100000,
+      memo: null
+    });
+  }
+  state.retirees = retirees;
+
+  const labor=[];
+  let baseCost = 420000000, baseHead = 118, baseRev = 1650000000;
+  for(let y=2024;y<=2026;y++){
+    const lastMonth = y===2026?8:12;
+    for(let m=1;m<=lastMonth;m++){
+      baseCost *= (1+ (Math.random()*0.012-0.002));
+      baseHead += (Math.random()<0.5? 0 : (Math.random()<0.5?1:-1));
+      baseHead = Math.max(95, baseHead);
+      baseRev *= (1+ (Math.random()*0.02-0.006));
+      labor.push({
+        year:y, month:m,
+        cost: Math.round(baseCost),
+        headcount: Math.round(baseHead),
+        revenue: Math.round(baseRev),
+        memo: (m===1?'연초 정기승급 반영': (m===12?'연말 상여 반영': null))
+      });
+    }
+  }
+  state.laborCost = labor;
+  state.salaryDetailed = null;
+  state.careerDetailed = null;
+  state.missingSheets = [];
+
+  finalizeState();
+}
+
+/* ============================ 상태 확정/파생값 ============================ */
+function finalizeState(){
+  const divSet = new Set();
+  state.employees.forEach(e=>divSet.add(e.division||'(미지정)'));
+  state.retirees.forEach(e=>divSet.add(e.division||'(미지정)'));
+  state.divisions = Array.from(divSet).filter(Boolean).sort();
+
+  const monthSet = new Set();
+  state.laborCost.forEach(r=>monthSet.add(r.year+'-'+String(r.month).padStart(2,'0')));
+  state.months = Array.from(monthSet).sort();
+
+  populateFilterOptions();
+  updateFileMeta();
+  renderAll();
+}
+function populateFilterOptions(){
+  const divSel = $('#f-division');
+  const cur = state.filters.division;
+  divSel.innerHTML = '<option value="">전체</option>' + state.divisions.map(d=>`<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');
+  divSel.value = state.divisions.includes(cur) ? cur : '';
+
+  const moSel = $('#f-month');
+  const curM = state.filters.month;
+  moSel.innerHTML = state.months.map(m=>`<option value="${m}">${m}</option>`).join('');
+  if(state.months.length){
+    if(state.months.includes(curM)){
+      moSel.value = curM;
+    } else {
+      // 인건비/매출액 값이 실제로 채워진 가장 최근 월을 기본값으로 (아직 집계 전인 최신월엔 인원만 있는 경우가 있음)
+      const withData = state.laborCost.filter(r=> r.cost!=null && r.revenue!=null);
+      const best = withData.length ? withData[withData.length-1] : state.laborCost[state.laborCost.length-1];
+      moSel.value = best ? (best.year+'-'+String(best.month).padStart(2,'0')) : state.months[state.months.length-1];
+    }
+    state.filters.month = moSel.value;
+  }
+}
+function updateFileMeta(){
+  $('#sf-filename').textContent = state.usingSample ? '샘플 데이터' : (state.fileName || '파일 없음');
+  $('#sf-asof').textContent = fmtDate(state.asOf) + (state.wb && !state.asOfIsFromWorkbook ? ' (워크북에서 기준일을 찾지 못해 오늘 날짜 사용)' : '');
+  const chip = $('#status-chip'), txt = $('#status-text');
+  if(state.usingSample){
+    chip.classList.remove('ok'); txt.textContent = '샘플 데이터 사용 중';
+  } else if(state.wb){
+    chip.classList.add('ok'); txt.textContent = '연결됨 · '+state.fileName;
+  } else {
+    chip.classList.remove('ok'); txt.textContent = '파일 미연결';
+  }
+  $('#btn-refresh').disabled = !(state.dirHandle || state.wb || state.usingSample);
+  $('#empty-state').style.display = (state.wb || state.usingSample) ? 'none' : '';
+  if(state.wb || state.usingSample){ const rc=$('#reconnect-state'); if(rc) rc.style.display='none'; }
+  $('#global-filter-bar').style.display = (state.wb || state.usingSample) ? '' : 'none';
+
+  let warn = document.getElementById('sheet-warn-chip');
+  if(state.missingSheets && state.missingSheets.length){
+    if(!warn){
+      warn = document.createElement('span');
+      warn.id = 'sheet-warn-chip';
+      warn.className = 'status-chip';
+      warn.style.background = '#FCEBEC';
+      warn.style.color = '#E5484D';
+      chip.insertAdjacentElement('afterend', warn);
+    }
+    warn.innerHTML = '<span class="dot"></span>시트 미인식: '+state.missingSheets.join(', ');
+    warn.style.display = '';
+  } else if(warn){
+    warn.style.display = 'none';
+  }
+}
+
+/* ============================= 필터 적용 ============================= */
+function filteredEmployees(){
+  const d = state.filters.division;
+  return state.employees.filter(e => !d || e.division===d);
+}
+function filteredRetirees(){
+  const d = state.filters.division;
+  return state.retirees.filter(e => !d || e.division===d);
+}
+function currentYear(){
+  if(state.filters.month) return parseInt(state.filters.month.split('-')[0],10);
+  return state.asOf.getFullYear();
+}
+
+/* ================================ 차트 공통 ================================ */
+const PALETTE = ['#7C5CFC','#5B3DE8','#B9A6FF','#E8A33D','#1BA672','#E5484D','#8E8AA8','#C9A6FF'];
+const charts = {};
+function makeChart(id, config){
+  const el = document.getElementById(id);
+  if(!el) return;
+  if(charts[id]) charts[id].destroy();
+  charts[id] = new Chart(el.getContext('2d'), config);
+}
+Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+Chart.defaults.color = '#6E6B85';
+Chart.defaults.plugins.legend.labels.boxWidth = 10;
+Chart.defaults.plugins.legend.labels.font = {size:11};
+
+function kpiCard(label, valueHtml, deltaHtml, iconSvg){
+  return `<div class="card kpi-card">
+    <div class="kpi-label">${label}</div>
+    <div class="kpi-value">${valueHtml}</div>
+    ${deltaHtml? `<div class="kpi-delta ${deltaHtml.cls}">${deltaHtml.text}</div>` : ''}
+    ${iconSvg? `<div class="kpi-icon">${iconSvg}</div>` : ''}
+  </div>`;
+}
+const ICON_PEOPLE = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>';
+const ICON_WON    = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><text x="12" y="17.5" font-size="15" font-weight="800" text-anchor="middle" fill="currentColor">\u20A9</text></svg>';
+const ICON_CLOCK  = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>';
+const ICON_ARROW  = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>';
+
+/* =============================== 데이터 테이블 =============================== */
+function DataTable(tableEl){
+  let rows=[], columns=[], sortKey=null, sortDir=1;
+  function setColumns(cols){ columns=cols; }
+  function setRows(newRows){ rows=newRows; render(); }
+  function render(){
+    let sorted = rows.slice();
+    if(sortKey){
+      sorted.sort((a,b)=>{
+        let av=a[sortKey], bv=b[sortKey];
+        if(av==null && bv==null) return 0;
+        if(av==null) return 1; if(bv==null) return -1;
+        if(av instanceof Date || bv instanceof Date) return ((av>bv)?1:(av<bv?-1:0))*sortDir;
+        if(typeof av==='number' && typeof bv==='number') return (av-bv)*sortDir;
+        return String(av).localeCompare(String(bv),'ko')*sortDir;
+      });
+    }
+    const thead = '<thead><tr>'+columns.map(c=>
+      `<th data-key="${escapeHtml(c.key)}"${c.width?` style="width:${c.width};"`:''}>${escapeHtml(c.label)}${sortKey===c.key? `<span class="arrow">${sortDir>0?'▲':'▼'}</span>`:''}</th>`
+    ).join('')+'</tr></thead>';
+    const tbody = '<tbody>'+ (sorted.length? sorted.map(r=>
+      '<tr>'+columns.map(c=>{
+        const v = r[c.key];
+        const out = c.format ? c.format(v, r) : (v==null||v===''? '<span style="color:#C9C6DC;">-</span>' : escapeHtml(String(v)));
+        return `<td${c.align?` style="text-align:${c.align}"`:''}>${out}</td>`;
+      }).join('')+'</tr>'
+    ).join('') : `<tr><td colspan="${columns.length}" style="text-align:center;color:var(--text-3);padding:26px;">표시할 데이터가 없습니다</td></tr>`) +'</tbody>';
+    tableEl.innerHTML = thead+tbody;
+    $$('thead th', tableEl).forEach(th=>{
+      th.addEventListener('click', ()=>{
+        const k = th.dataset.key;
+        if(sortKey===k) sortDir*=-1; else { sortKey=k; sortDir=1; }
+        render();
+      });
+    });
+  }
+  return { setColumns, setRows, getRows: ()=>rows };
+}
+const tables = {};
+function ensureTable(id){ if(!tables[id]) tables[id]=DataTable(document.getElementById(id)); return tables[id]; }
+
+/* =============================== 렌더: 전체 =============================== */
+function renderAll(){
+  renderDashboard();
+  renderHeadcount();
+  renderLaborCost();
+  renderSalary();
+  renderCareer();
+}
+
+/* =============================== 렌더: 대시보드 =============================== */
+function renderDashboard(){
+  const emps = filteredEmployees();
+  const total = emps.length;
+  const execs = emps.filter(isExecutive);
+  const general = emps.filter(e=>!isExecutive(e)); // 임원 제외 일반직 (연봉 통계용)
+  const male = emps.filter(e=>isMale(e.gender)).length;
+  const female = emps.filter(e=>isFemale(e.gender)).length;
+  const roleCount = emps.filter(e=>hasRole(e.title)).length; // 보직자: 직책≠'프로' (임원 포함)
+
+  // 직책별 세분화: 본부장은 별도 표기 없이 사업부장에 통합
+  const TITLE_ORDER = ['대표이사','사업부장','실장','팀장','프로'];
+  function normalizeTitle(t){ const s=String(t||'').trim(); return s==='본부장' ? '사업부장' : (s||'(미지정)'); }
+  const titleCounts = {};
+  emps.forEach(e=>{ const k=normalizeTitle(e.title); titleCounts[k]=(titleCounts[k]||0)+1; });
+  const titleOrderedKeys = TITLE_ORDER.filter(k=>titleCounts[k]!=null)
+    .concat(Object.keys(titleCounts).filter(k=>!TITLE_ORDER.includes(k)));
+  const avgAge = mean(emps.map(e=>e.age));
+  const avgTenureYears = mean(emps.map(e=>e.tenureMonths)) / 12;
+  const y = currentYear();
+  const hiresThisYear = emps.filter(e=> e.hireDate && e.hireDate.getFullYear()===y).length;
+  const resignsThisYear = filteredRetirees().filter(e=> e.resignDate && e.resignDate.getFullYear()===y).length;
+  const salaries = general.map(e=>e.salary).filter(v=>v!=null); // 평균연봉은 임원 제외
+  const avgSalary = mean(salaries), medSalary = median(salaries);
+
+  // 인건비 비중(B/A): 당해연도 1월~기준월 누적(YTD) vs 전년동기 누적
+  const lc = state.laborCost.filter(r=> !state.filters.division);
+  const refRow = lc.length? (lc.find(r=> (r.year+'-'+String(r.month).padStart(2,'0'))===state.filters.month) || lc[lc.length-1]) : null;
+  let ba=null, baPrevYear=null;
+  if(refRow){
+    const ytd = lc.filter(r=> r.year===refRow.year && r.month<=refRow.month);
+    const ytdCost = ytd.reduce((s,r)=>s+(r.cost||0),0);
+    const ytdRevenue = ytd.reduce((s,r)=>s+(r.revenue||0),0);
+    ba = ytdRevenue? ytdCost/ytdRevenue*100 : null;
+    const prevYtd = lc.filter(r=> r.year===refRow.year-1 && r.month<=refRow.month);
+    const prevYtdCost = prevYtd.reduce((s,r)=>s+(r.cost||0),0);
+    const prevYtdRevenue = prevYtd.reduce((s,r)=>s+(r.revenue||0),0);
+    baPrevYear = (prevYtd.length && prevYtdRevenue)? prevYtdCost/prevYtdRevenue*100 : null;
+  }
+
+  // 당해연도 평균 인원수 (인건비 시트의 월별 인원수 평균) → 퇴사율 분모
+  const yearLaborRows = state.laborCost.filter(r=>r.year===y);
+  const avgHeadcountYear = yearLaborRows.length? mean(yearLaborRows.map(r=>r.headcount)) : null;
+  const turnoverRate = (avgHeadcountYear)? (resignsThisYear/avgHeadcountYear*100) : null;
+
+  const kpis = [
+    kpiCard('전체 임직원 수', fmtInt(total)+'<small> 명</small>',
+      {cls:'flat', text:`임원 ${fmtInt(execs.length)} · 직원 ${fmtInt(general.length)}`}, ICON_PEOPLE),
+    kpiCard('보직자 비율', total? fmtPct(roleCount/total*100,1) : '-',
+      {cls:'flat', text:`보직자 ${fmtInt(roleCount)}명 / 비보직 ${fmtInt(total-roleCount)}명`}, ICON_PEOPLE),
+    kpiCard('평균 연령 · 근속', (avgAge!=null? fmtInt(avgAge)+'세':'-'),
+      {cls:'flat', text:`평균 근속 ${avgTenureYears? avgTenureYears.toFixed(1):'-'}년`}, ICON_CLOCK),
+    kpiCard(y+'년 입사·퇴사', `${fmtInt(hiresThisYear)} <small> / </small> ${fmtInt(resignsThisYear)}`,
+      {cls:'flat', text:`퇴사율 ${turnoverRate!=null? fmtPct(turnoverRate,1):'-'}`}, ICON_ARROW),
+    kpiCard('평균 연봉', avgSalary!=null? fmtWon(avgSalary)+'<small> 원</small>':'-',
+      {cls:'flat', text:(medSalary!=null? '중앙값 '+fmtWon(medSalary)+'원 · ':'')+'임원 제외'}, ICON_WON),
+    kpiCard('인건비 비중 (B/A, YTD 누적)', ba!=null? fmtPct(ba,1):'-',
+      baPrevYear!=null? {cls: ba>baPrevYear?'down':(ba<baPrevYear?'up':'flat'), text:(ba>baPrevYear?'▲':'▼')+' 전년동기 '+fmtPct(baPrevYear,1)} : null, ICON_WON)
+  ];
+  $('#kpi-grid-1').innerHTML = kpis.join('');
+
+  // 추이 차트: 최근 12개월 인원/인건비
+  const last12 = state.laborCost.slice(-12);
+  const last12Heads = last12.map(r=>r.headcount).filter(v=>v!=null);
+  const headMaxRaw = last12Heads.length? Math.max(...last12Heads) : null;
+  const y2Max = headMaxRaw!=null? Math.max(20, Math.ceil(headMaxRaw/20)*20) : null; // 20단위로 올림 (예: 84명 → 100)
+  const y2Step = y2Max? y2Max/5 : null; // 0~max를 6개 눈금(5구간)으로 균등 분할
+  makeChart('chart-headcount-cost', {
+    data: {
+      labels: last12.map(r=>r.year+'.'+String(r.month).padStart(2,'0')),
+      datasets: [
+        {type:'bar', label:'인건비(원)', data: last12.map(r=>r.cost), backgroundColor:'#D9CDFF', yAxisID:'y1', borderRadius:5, order:2},
+        {type:'line', label:'인원(명)', data: last12.map(r=>r.headcount), borderColor:'#7C5CFC', backgroundColor:'#7C5CFC', tension:.35, yAxisID:'y2', order:1, pointRadius:3}
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index', intersect:false},
+      scales:{
+        y1:{ position:'left', beginAtZero:true, ticks:{callback:v=>fmtWon(v), count:6} , grid:{color:'#F1EFF9'}},
+        y2:{ position:'right', beginAtZero:true, min:0, max: y2Max || undefined,
+          ticks: y2Step? {stepSize:y2Step} : {count:6},
+          grid:{drawOnChartArea:false} }
+      },
+      plugins:{ legend:{position:'bottom'} }
+    }
+  });
+
+  // 근속연수 구간 분포
+  const buckets = [['1년미만',0,12],['1~3년',12,36],['3~5년',36,60],['5~10년',60,120],['10~20년',120,240],['20년이상',240,999999]];
+  const distCounts = buckets.map(([label,lo,hi])=> emps.filter(e=> e.tenureMonths!=null && e.tenureMonths>=lo && e.tenureMonths<hi).length);
+  makeChart('chart-tenure', {
+    type:'bar',
+    data:{ labels:buckets.map(b=>b[0]), datasets:[{label:'인원(명)', data:distCounts, backgroundColor:'#7C5CFC', borderRadius:5}] },
+    options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y',
+      plugins:{legend:{display:false}}, scales:{ x:{grid:{color:'#F1EFF9'}} } }
+  });
+
+  // 사업부별 인원(선형)/평균연봉(막대) (임원은 정식 사업부 소속이 아닌 경우가 많아 제외)
+  const byDiv = groupDivision(general);
+  makeChart('chart-division', {
+    data:{
+      labels: byDiv.map(d=>d.division),
+      datasets:[
+        {type:'bar', label:'평균연봉(원)', data:byDiv.map(d=>d.avgSalary), backgroundColor:'#7C5CFC', yAxisID:'y1', borderRadius:5, order:2},
+        {type:'line', label:'인원(명)', data:byDiv.map(d=>d.count), borderColor:'#E8A33D', backgroundColor:'#E8A33D', yAxisID:'y2', tension:.3, pointRadius:3, order:1}
+      ]
+    },
+    options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+      scales:{ y1:{position:'left', grid:{color:'#F1EFF9'}, ticks:{callback:v=>fmtWon(v)}}, y2:{position:'right', grid:{drawOnChartArea:false}} },
+      plugins:{legend:{position:'bottom'}} }
+  });
+
+  // 성별 구성 / 보직자 구성 — 서로 다른 기준이라 별도 도넛으로 분리 (색인 혼용 방지)
+  makeChart('chart-gender', {
+    type:'doughnut',
+    data:{ labels:['남','여'], datasets:[{data:[male, female], backgroundColor:['#7C5CFC','#E8DEFF'], borderWidth:2, borderColor:'#fff'}] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'},
+      tooltip:{ callbacks:{ label:(ctx)=>{ const t=ctx.dataset.data.reduce((a,b)=>a+b,0); return `${ctx.label}: ${ctx.parsed}명 (${t? (ctx.parsed/t*100).toFixed(1):0}%)`; } } } } }
+  });
+  const AMBER_SHADES = ['#A66A15','#D08E22','#E8A33D','#EFC178','#F6DFB8','#FAE6C8','#FDF2E3','#FFFAF0'];
+  makeChart('chart-role', {
+    type:'doughnut',
+    data:{ labels:titleOrderedKeys,
+      datasets:[{ data:titleOrderedKeys.map(k=>titleCounts[k]),
+        backgroundColor: titleOrderedKeys.map((k,i)=> AMBER_SHADES[i % AMBER_SHADES.length]),
+        borderWidth:2, borderColor:'#fff' }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'},
+      tooltip:{ callbacks:{ label:(ctx)=>{ const t=ctx.dataset.data.reduce((a,b)=>a+b,0); return `${ctx.label}: ${ctx.parsed}명 (${t? (ctx.parsed/t*100).toFixed(1):0}%)`; } } } } }
+  });
+
+  // 사업부별 상세 테이블
+  const t = ensureTable('tbl-division-summary');
+  const divTotal = byDiv.reduce((s,d)=>s+d.count,0);
+  const yearRetirees = filteredRetirees().filter(e=> e.resignDate && e.resignDate.getFullYear()===y);
+  const divResignCount = {};
+  yearRetirees.forEach(e=>{ const k=e.division||'(미지정)'; divResignCount[k]=(divResignCount[k]||0)+1; });
+  t.setColumns([
+    {key:'division', label:'사업부명'},
+    {key:'count', label:'인원(명)', align:'right'},
+    {key:'ratio', label:'인원비율', align:'right', format:v=>fmtPct(v,1)},
+    {key:'avgTenure', label:'평균근속(년)', align:'right', format:v=>v==null?'-':v.toFixed(1)},
+    {key:'avgSalary', label:'평균연봉(원)', align:'right', format:v=>fmtWon(v)},
+    {key:'turnover', label:'퇴사율', align:'right', format:v=>v==null?'-':fmtPct(v,1)}
+  ]);
+  t.setRows(byDiv.map(d=>{
+    const rc = divResignCount[d.division]||0;
+    const denom = d.count + rc; // 현재인원 + 당해퇴사자수로 평균인원 근사
+    return {division:d.division, count:d.count, ratio: divTotal? d.count/divTotal*100 : null,
+      avgTenure:d.avgTenure, avgSalary:d.avgSalary, turnover: denom? rc/denom*100 : null};
+  }));
+  let execNote = document.getElementById('div-exec-note');
+  if(execs.length){
+    if(!execNote){
+      execNote = document.createElement('div');
+      execNote.id = 'div-exec-note';
+      execNote.className = 'table-meta';
+      execNote.style.marginTop = '8px';
+      $('#tbl-division-summary').insertAdjacentElement('afterend', execNote);
+    }
+    execNote.textContent = '  ※ 임원은 사업부 통계에서 제외됩니다.';
+  } else if(execNote){
+    execNote.remove();
+  }
+}
+function groupDivision(emps){
+  const map = {};
+  emps.forEach(e=>{
+    const k = e.division||'(미지정)';
+    if(!map[k]) map[k]={division:k, list:[]};
+    map[k].list.push(e);
+  });
+  return Object.values(map).map(g=>({
+    division:g.division,
+    count:g.list.length,
+    avgTenure: mean(g.list.map(e=>e.tenureMonths))/12,
+    avgSalary: mean(g.list.map(e=>e.salary)),
+    roleCount: g.list.filter(e=>hasRole(e.title)).length
+  })).sort((a,b)=>b.count-a.count);
+}
+
+/* =============================== 렌더: 인원현황 =============================== */
+function renderHeadcount(){
+  renderActiveEmployees();
+  renderResignedEmployees();
+}
+function renderActiveEmployees(){
+  const emps = filteredEmployees();
+  const total = emps.length;
+  const leaveCount = emps.filter(e=>String(e.status||'').includes('휴직')).length;
+  const execs = emps.filter(isExecutive);
+  const general = emps.filter(e=>!isExecutive(e));
+
+  const avgSalaryAll = mean(emps.map(e=>e.salary));
+  const avgSalaryGeneral = mean(general.map(e=>e.salary));
+  const avgTenureAll = mean(emps.map(e=>e.tenureMonths))/12;
+  const avgTenureGeneral = mean(general.map(e=>e.tenureMonths))/12;
+
+  const contractCounts = { 정규직:0, 계약직:0, 시용직:0, 미상:0 };
+  general.forEach(e=>{
+    const k = e.contractType && contractCounts.hasOwnProperty(e.contractType) ? e.contractType : (e.contractType? '미상' : '미상');
+    contractCounts[k]++;
+  });
+  const contractSummary = [`임원 ${execs.length}`, `정규직 ${contractCounts['정규직']}`, `계약직 ${contractCounts['계약직']}`, `시용직 ${contractCounts['시용직']}`]
+    .concat(contractCounts['미상']? [`미상 ${contractCounts['미상']}`] : []).join(' · ');
+
+  const activeOnly = total - leaveCount;
+  $('#kpi-grid-active').innerHTML = [
+    kpiCard('재직자 수', fmtInt(total)+'<small> 명</small>',
+      {cls:'flat', text:`휴직 ${fmtInt(leaveCount)}명 포함 · <span style="color:var(--text-2);">임원 제외</span> <span class="accent-inline">${fmtInt(general.length)}명</span>`}, ICON_PEOPLE),
+    kpiCard('평균 연봉', fmtWon(avgSalaryAll)+'<small> 원</small>',
+      {cls:'flat', text:`<span style="color:var(--text-2);">임원 제외</span> <span class="accent-inline">${fmtWon(avgSalaryGeneral)}원</span>`}, ICON_WON),
+    kpiCard('평균 근속', (avgTenureAll||0).toFixed(1)+'<small> 년</small>',
+      {cls:'flat', text:`<span style="color:var(--text-2);">임원 제외</span> <span class="accent-inline">${(avgTenureGeneral||0).toFixed(1)}년</span>`}, ICON_CLOCK),
+    kpiCard('계약유형 구성', `<span class="kpi-value-compact" style="font-size:16.5px;">${contractSummary||'-'}</span>`, null, ICON_PEOPLE)
+  ].join('');
+
+  const q = norm($('#search-active').value);
+  const rows = emps.filter(e=> !q || [e.name,e.division,e.dept,e.rank,e.title].some(v=>norm(v).includes(q)));
+  $('#meta-active').textContent = `${rows.length.toLocaleString('ko-KR')}건 표시 (전체 ${total.toLocaleString('ko-KR')}건)`;
+  const t = ensureTable('tbl-active');
+  t.setColumns([
+    {key:'name', label:'성명', align:'center'},
+    {key:'status', label:'재직여부', align:'center', format:v=> v? `<span class="tag ${String(v).includes('휴직')?'gray':'green'}">${escapeHtml(v)}</span>` : '-'},
+    {key:'division', label:'사업부명', align:'left'},
+    {key:'dept', label:'부서명', align:'left'},
+    {key:'gender', label:'성별', align:'center'},
+    {key:'title', label:'직책', align:'center'},
+    {key:'rank', label:'직급', align:'center'},
+    {key:'age', label:'나이', align:'center'},
+    {key:'hireDate', label:'입사일자', align:'center', format:v=>fmtDate(v)},
+    {key:'tenureMonths', label:'근속(개월)', align:'right', format:v=>fmtInt(v)},
+    {key:'contractType', label:'계약유형', align:'center'},
+    {key:'salary', label:'연봉(원)', align:'right', format:v=>fmtWon(v)},
+    {key:'priorCareerMonths', label:'이전경력(개월)', align:'right', format:v=>fmtInt(v)}
+  ]);
+  t.setRows(rows);
+}
+function renderResignedEmployees(){
+  const emps = filteredRetirees();
+  const y = currentYear();
+  const curYear = emps.filter(e=> e.resignDate && e.resignDate.getFullYear()===y);
+  const prevYear = emps.filter(e=> e.resignDate && e.resignDate.getFullYear()===y-1);
+
+  const isVoluntary = e=> String(e.resignType||'').includes('자발') && !String(e.resignType||'').includes('비자발');
+  const isInvoluntary = e=> String(e.resignType||'').includes('비자발');
+  const voluntary = curYear.filter(isVoluntary).length;
+  const involuntary = curYear.filter(isInvoluntary).length;
+  const voluntaryPrev = prevYear.filter(isVoluntary).length;
+  const involuntaryPrev = prevYear.filter(isInvoluntary).length;
+  const avgTenurePrev = mean(prevYear.map(e=>e.tenureMonths))/12;
+
+  $('#kpi-grid-resigned').innerHTML = [
+    kpiCard(y+'년 퇴직자 수', fmtInt(curYear.length)+'<small> 명</small>', {cls:'flat', text:`<span style="color:var(--text-2);">전년도</span><span class="accent-inline">${fmtInt(prevYear.length)}명</span>`}, ICON_PEOPLE),
+    kpiCard('자발적 퇴직', fmtInt(voluntary)+'<small> 명</small>', {cls:'flat', text:`<span style="color:var(--text-2);">전년도</span><span class="accent-inline">${fmtInt(voluntaryPrev)}명</span>`}, ICON_ARROW),
+    kpiCard('비자발적 퇴직', fmtInt(involuntary)+'<small> 명</small>', {cls:'flat', text:`<span style="color:var(--text-2);">전년도</span><span class="accent-inline">${fmtInt(involuntaryPrev)}명</span>`}, ICON_ARROW),
+    kpiCard('평균 재직기간', (mean(curYear.map(e=>e.tenureMonths))/12 || 0).toFixed(1)+'<small> 년</small>', {cls:'flat', text:`<span style="color:var(--text-2);">전년도</span><span class="accent-inline">${(avgTenurePrev||0).toFixed(1)}년</span>`}, ICON_CLOCK)
+  ].join('');
+
+  // 재직기간별 퇴직 비율 (당해연도 퇴직자 기준)
+  const tenureBuckets = [['1년미만',0,12],['1~3년',12,36],['3~5년',36,60],['5~10년',60,120],['10년이상',120,999999]];
+  const tenureCounts = tenureBuckets.map(([label,lo,hi])=> curYear.filter(e=> e.tenureMonths!=null && e.tenureMonths>=lo && e.tenureMonths<hi).length);
+  const tenureTotal = tenureCounts.reduce((a,b)=>a+b,0);
+  makeChart('chart-resign-type', {
+    type:'doughnut',
+    data:{ labels:tenureBuckets.map(b=>b[0]), datasets:[{data:tenureCounts, backgroundColor:PALETTE, borderWidth:2, borderColor:'#fff'}] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'},
+      tooltip:{ callbacks:{ label:(ctx)=> `${ctx.label}: ${ctx.parsed}명 (${tenureTotal? (ctx.parsed/tenureTotal*100).toFixed(1):0}%)` } } } }
+  });
+
+  // 계약유형별 퇴직 비율: 당해연도 퇴직자만 반영
+  const ctCounts = {};
+  curYear.forEach(e=>{ const k=e.contractType||'미상'; ctCounts[k]=(ctCounts[k]||0)+1; });
+  const ctTotal = Object.values(ctCounts).reduce((a,b)=>a+b,0);
+  makeChart('chart-resign-contract', {
+    type:'bar',
+    data:{ labels:Object.keys(ctCounts), datasets:[{label:'퇴직자 수', data:Object.values(ctCounts), backgroundColor:'#7C5CFC', borderRadius:6}] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},
+        tooltip:{ callbacks:{ label:(ctx)=> `${ctx.formattedValue}명 (${ctTotal? (ctx.parsed.y/ctTotal*100).toFixed(1):0}%)` } } },
+      scales:{y:{grid:{color:'#F1EFF9'}}} }
+  });
+
+  const q = norm($('#search-resigned').value);
+  const total = emps.length;
+  const rows = emps.filter(e=> !q || [e.name,e.division,e.dept,e.rank,e.title].some(v=>norm(v).includes(q)));
+  $('#meta-resigned').textContent = `${rows.length.toLocaleString('ko-KR')}건 표시 (전체 ${total.toLocaleString('ko-KR')}건, ${y}년+${y-1}년)`;
+  const t = ensureTable('tbl-resigned');
+  t.setColumns([
+    {key:'name', label:'성명', align:'center'},
+    {key:'division', label:'사업부명', align:'left'},
+    {key:'dept', label:'부서명', align:'left'},
+    {key:'rank', label:'직급', align:'center'},
+    {key:'hireDate', label:'입사일자', align:'center', format:v=>fmtDate(v)},
+    {key:'resignDate', label:'퇴사일자', align:'center', format:v=>fmtDate(v)},
+    {key:'tenureMonths', label:'재직기간(개월)', align:'right', format:v=>fmtInt(v)},
+    {key:'resignType', label:'퇴직유형', align:'center', format:v=>v?`<span class="tag ${String(v).includes('비자발')?'red':'green'}">${escapeHtml(v)}</span>`:'-'},
+    {key:'contractType', label:'계약유형', align:'center'},
+    {key:'finalSalary', label:'최종연봉(원)', align:'right', format:v=>fmtWon(v)},
+    {key:'memo', label:'비고(퇴직사유)', align:'left'}
+  ]);
+  t.setRows(rows);
+}
+
+/* =============================== 렌더: 인건비 =============================== */
+function renderLaborCost(){
+  const rows = state.laborCost.map((r,i,arr)=>{
+    const prevYear = arr.find(x=>x.year===r.year-1 && x.month===r.month);
+    const costYoY = (prevYear && prevYear.cost) ? (r.cost-prevYear.cost)/prevYear.cost*100 : null;
+    const headYoY = (prevYear && prevYear.headcount) ? (r.headcount-prevYear.headcount)/prevYear.headcount*100 : null;
+    const perCapita = (r.cost && r.headcount)? r.cost/r.headcount : null;
+    const prevPerCapita = (prevYear && prevYear.cost && prevYear.headcount) ? prevYear.cost/prevYear.headcount : null;
+    const perCapitaYoY = (prevPerCapita)? (perCapita-prevPerCapita)/prevPerCapita*100 : null;
+    const ba = (r.revenue)? r.cost/r.revenue*100 : null;
+    return Object.assign({}, r, {
+      perCapita, ba, costYoY, headYoY, perCapitaYoY,
+      label: r.year+'.'+String(r.month).padStart(2,'0')
+    });
+  });
+
+  const sel = state.filters.month;
+  const cur = rows.find(r=> (r.year+'-'+String(r.month).padStart(2,'0'))===sel) || rows[rows.length-1];
+
+  let kpiHtml;
+  if(cur){
+    const y = cur.year, m = cur.month;
+    const ytdRows = rows.filter(r=> r.year===y && r.month<=m);
+    const prevYtdRows = rows.filter(r=> r.year===y-1 && r.month<=m);
+    const ytdCost = ytdRows.reduce((s,r)=>s+(r.cost||0),0);
+    const ytdRevenue = ytdRows.reduce((s,r)=>s+(r.revenue||0),0);
+    const ytdHeadAvg = mean(ytdRows.map(r=>r.headcount));
+    const prevYtdCost = prevYtdRows.reduce((s,r)=>s+(r.cost||0),0);
+    const prevYtdRevenue = prevYtdRows.reduce((s,r)=>s+(r.revenue||0),0);
+    const prevYtdHeadAvg = mean(prevYtdRows.map(r=>r.headcount));
+
+    const ytdCostGrowth = prevYtdCost? (ytdCost-prevYtdCost)/prevYtdCost*100 : null;
+    const perCapitaCost = ytdHeadAvg? ytdCost/ytdHeadAvg : null;
+    const prevPerCapitaCost = prevYtdHeadAvg? prevYtdCost/prevYtdHeadAvg : null;
+    const perCapitaCostGrowth = prevPerCapitaCost? (perCapitaCost-prevPerCapitaCost)/prevPerCapitaCost*100 : null;
+    const ba = ytdRevenue? ytdCost/ytdRevenue*100 : null;
+    const baPrev = (prevYtdRows.length && prevYtdRevenue)? prevYtdCost/prevYtdRevenue*100 : null;
+    const perCapitaRevenue = ytdHeadAvg? ytdRevenue/ytdHeadAvg : null;
+    const prevPerCapitaRevenue = prevYtdHeadAvg? prevYtdRevenue/prevYtdHeadAvg : null;
+    const perCapitaRevenueGrowth = prevPerCapitaRevenue? (perCapitaRevenue-prevPerCapitaRevenue)/prevPerCapitaRevenue*100 : null;
+
+    kpiHtml = [
+      kpiCard(cur.label+' 누적 인건비', fmtWon(ytdCost)+'<small> 원</small>',
+        prevYtdCost? {cls:'flat', text:`전년동기 ${fmtWon(prevYtdCost)}원 (${ytdCostGrowth>=0?'+':''}${fmtPct(ytdCostGrowth,1)})`} : null, ICON_WON),
+      kpiCard('인당 인건비', perCapitaCost!=null? fmtWon(perCapitaCost)+'<small> 원</small>':'-',
+        prevPerCapitaCost!=null? {cls:'flat', text:`전년동기 ${fmtWon(prevPerCapitaCost)}원 (${perCapitaCostGrowth>=0?'+':''}${fmtPct(perCapitaCostGrowth,1)})`} : null, ICON_PEOPLE),
+      kpiCard('매출액 대비 인건비 (B/A, YTD 누적)', ba!=null? fmtPct(ba,1):'-',
+        baPrev!=null? {cls: ba>baPrev?'down':(ba<baPrev?'up':'flat'), text:(ba>baPrev?'▲':'▼')+' 전년동기 '+fmtPct(baPrev,1)} : null, ICON_WON),
+      kpiCard('인당 매출액', perCapitaRevenue!=null? fmtWon(perCapitaRevenue)+'<small> 원</small>':'-',
+        prevPerCapitaRevenue!=null? {cls:'flat', text:`전년동기 ${fmtWon(prevPerCapitaRevenue)}원 (${perCapitaRevenueGrowth>=0?'+':''}${fmtPct(perCapitaRevenueGrowth,1)})`} : null, ICON_PEOPLE)
+    ].join('');
+  } else {
+    kpiHtml = '<div class="callout">인건비 시트 데이터가 없습니다.</div>';
+  }
+  $('#kpi-grid-laborcost').innerHTML = kpiHtml;
+
+  makeChart('chart-laborcost', {
+    data:{
+      labels: rows.map(r=>r.label),
+      datasets:[
+        {type:'bar', label:'매출액(원)', data:rows.map(r=>r.revenue), backgroundColor:'#EFEAFF', yAxisID:'y1', borderRadius:4, order:3},
+        {type:'bar', label:'인건비(원)', data:rows.map(r=>r.cost), backgroundColor:'#7C5CFC', yAxisID:'y1', borderRadius:4, order:2},
+        {type:'line', label:'B/A(%)', data:rows.map(r=>r.ba), borderColor:'#E8A33D', backgroundColor:'#E8A33D', yAxisID:'y2', tension:.3, order:1, pointRadius:2}
+      ]
+    },
+    options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index', intersect:false},
+      scales:{ y1:{position:'left', ticks:{callback:v=>fmtWon(v)}, grid:{color:'#F1EFF9'}}, y2:{position:'right', grid:{drawOnChartArea:false}, ticks:{callback:v=>v+'%'}} },
+      plugins:{legend:{position:'bottom'},
+        tooltip:{ callbacks:{ label:(ctx)=>{
+          const v = ctx.parsed.y;
+          if(ctx.dataset.label==='B/A(%)') return `B/A(%): ${v==null? '-' : v.toFixed(1)+'%'}`;
+          return `${ctx.dataset.label}: ${fmtWon(v)}원`;
+        } } } } }
+  });
+
+  const t = ensureTable('tbl-laborcost');
+  t.setColumns([
+    {key:'label', label:'연월'},
+    {key:'headcount', label:'인원(명)', align:'right', format:v=>fmtInt(v)},
+    {key:'cost', label:'인건비(원)', align:'right', format:v=>fmtWon(v)},
+    {key:'perCapita', label:'인당 인건비(원)', align:'right', format:v=>fmtWon(v)},
+    {key:'revenue', label:'매출액(원)', align:'right', format:v=>fmtWon(v)},
+    {key:'ba', label:'B/A(%)', align:'right', format:v=>fmtPct(v,1)},
+    {key:'headYoY', label:'인원 전년동월比', align:'right', format:v=>v==null?'-':(v>=0?'+':'')+fmtPct(v,1)},
+    {key:'costYoY', label:'인건비 전년동월比', align:'right', format:v=>v==null?'-':(v>=0?'+':'')+fmtPct(v,1)},
+    {key:'perCapitaYoY', label:'인당 인건비 전년동월比', align:'right', format:v=>v==null?'-':(v>=0?'+':'')+fmtPct(v,1)}
+  ]);
+  t.setRows(rows);
+}
+
+/* =============================== 렌더: 연봉분석 =============================== */
+function renderSalary(){
+  const emps = filteredEmployees().filter(e=>e.salary!=null);
+  const detailed = state.salaryDetailed;
+  const usingSheet = !!(detailed && detailed.rankRows);
+
+  let rankRows;
+  if(usingSheet){
+    rankRows = detailed.rankRows.slice();
+    const execEmps = emps.filter(isExecutive);
+    if(execEmps.length){
+      const arr = execEmps.map(e=>e.salary);
+      const minEmp = execEmps.find(e=>e.salary===Math.min(...arr));
+      const maxEmp = execEmps.find(e=>e.salary===Math.max(...arr));
+      rankRows.push({
+        rank:'임원', count:arr.length, min:Math.min(...arr), minName:minEmp?minEmp.name:null,
+        max:Math.max(...arr), maxName:maxEmp?maxEmp.name:null,
+        avg:mean(arr), median:median(arr),
+        range: mean(arr)? ((Math.max(...arr)-Math.min(...arr))/mean(arr)*100) : null,
+        overlap: null
+      });
+    }
+  } else {
+    const byRank = {};
+    emps.forEach(e=>{ const k=effectiveRank(e); if(!byRank[k]) byRank[k]=[]; byRank[k].push(e); });
+    rankRows = Object.entries(byRank).map(([rank, list])=>{
+      const arr = list.map(e=>e.salary);
+      const minEmp = list.find(e=>e.salary===Math.min(...arr));
+      const maxEmp = list.find(e=>e.salary===Math.max(...arr));
+      return {
+        rank, count:arr.length, min:Math.min(...arr), minName:minEmp?minEmp.name:null,
+        max:Math.max(...arr), maxName:maxEmp?maxEmp.name:null,
+        avg:mean(arr), median:median(arr),
+        range: mean(arr)? ((Math.max(...arr)-Math.min(...arr))/mean(arr)*100) : null,
+        overlap: null
+      };
+    }).sort((a,b)=> (a.rank==='임원')-(b.rank==='임원') || String(a.rank).localeCompare(String(b.rank),'ko'));
+  }
+
+  let deciles;
+  if(usingSheet && detailed.deciles){
+    deciles = detailed.deciles;
+  } else {
+    const salVals = emps.map(e=>e.salary).sort((a,b)=>a-b);
+    deciles = [];
+    for(let i=1;i<=10;i++){
+      const lo = salVals[Math.floor((i-1)/10*salVals.length)];
+      const hi = salVals[Math.min(salVals.length-1, Math.floor(i/10*salVals.length)-1)];
+      deciles.push({label:i+'분위', lo, hi});
+    }
+  }
+  makeChart('chart-salary-decile', {
+    type:'bar',
+    data:{ labels:deciles.map(d=>d.label),
+      datasets:[{label:'연봉 범위(원)', data:deciles.map(d=>[d.lo, d.hi]), backgroundColor:PALETTE[0], borderRadius:4, borderSkipped:false}]},
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},
+        tooltip:{ callbacks:{ label:(ctx)=>{ const r=ctx.raw; return `하한 ${fmtWon(r[0])}원 ~ 상한 ${fmtWon(r[1])}원`; } } } },
+      scales:{ y:{ticks:{callback:v=>fmtWon(v)}, grid:{color:'#F1EFF9'}} } }
+  });
+
+  const rankRowsNoExec = rankRows.filter(r=>r.rank!=='임원');
+  makeChart('chart-salary-cl-range', {
+    data:{ labels:rankRowsNoExec.map(r=>r.rank),
+      datasets:[
+        {type:'bar', label:'연봉 범위(원)', data:rankRowsNoExec.map(r=>[r.min, r.max]), backgroundColor:'#7C5CFC', borderRadius:4, borderSkipped:false, maxBarThickness:80, order:2},
+        {type:'line', label:'중앙값', data:rankRowsNoExec.map(r=>r.median), borderColor:'#E8A33D', backgroundColor:'#E8A33D', tension:0, pointRadius:4, pointBackgroundColor:'#E8A33D', order:1}
+      ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{legend:{position:'bottom'},
+        tooltip:{ callbacks:{ label:(ctx)=>{
+          const r = rankRowsNoExec[ctx.dataIndex];
+          if(ctx.dataset.label==='중앙값') return `중앙값: ${fmtWon(r.median)}원`;
+          return [`상한: ${r.maxName||'-'} ${fmtWon(r.max)}원`, `하한: ${r.minName||'-'} ${fmtWon(r.min)}원`];
+        } } } },
+      scales:{ y:{ticks:{callback:v=>fmtWon(v)}, grid:{color:'#F1EFF9'}} } }
+  });
+
+  const t = ensureTable('tbl-salary-cl');
+  const METRIC_DEFS = [
+    { metric:'최고연봉(원)', get:r=>r.max, fmt:v=>fmtWon(v) },
+    { metric:'최저연봉(원)', get:r=>r.min, fmt:v=>fmtWon(v) },
+    { metric:'평균(원)', get:r=>r.avg, fmt:v=>fmtWon(v) },
+    { metric:'중앙값(원)', get:r=>r.median, fmt:v=>fmtWon(v) },
+    { metric:'Range(%)', get:r=>r.range, fmt:v=>fmtPct(v,1) },
+    { metric:'중첩률(%)', get:r=>r.overlap, fmt:v=>v==null?'-':fmtPct(v,1) }
+  ];
+  const fmtByMetric = {};
+  METRIC_DEFS.forEach(m=>fmtByMetric[m.metric]=m.fmt);
+  // 구분열은 좁게 고정, 나머지 CL열은 균등 분할 — 차트의 CL 구간 폭과 시각적으로 맞춤
+  const guColWidth = '84px';
+  t.setColumns([
+    {key:'metric', label:'구분', align:'center', width:guColWidth},
+    ...rankRowsNoExec.map(r=>({ key:r.rank, label:r.rank, align:'right', width:`calc((100% - ${guColWidth}) / ${rankRowsNoExec.length})`, format:(v,row)=> fmtByMetric[row.metric](v) }))
+  ]);
+  t.setRows(METRIC_DEFS.map(m=>{
+    const row = { metric:m.metric };
+    rankRowsNoExec.forEach(r=>{ row[r.rank] = m.get(r); });
+    return row;
+  }));
+}
+
+/* =============================== 렌더: 경력분석 =============================== */
+function renderCareer(){
+  const emps = filteredEmployees();
+  const detailed = state.careerDetailed;
+  const usingSheet = !!(detailed && detailed.detailRows);
+  const totalCareerMonths = e => (e.priorCareerMonths||0) + (e.tenureMonths||0);
+
+  if(usingSheet && detailed.buckets){
+    makeChart('chart-career-dist', {
+      type:'bar',
+      data:{ labels:detailed.buckets.map(b=>b.label), datasets:[{label:'인원(명)', data:detailed.buckets.map(b=>b.total), backgroundColor:'#7C5CFC', borderRadius:6}] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{grid:{color:'#F1EFF9'}}} }
+    });
+  } else {
+    const generalForDist = emps.filter(e=>!isExecutive(e));
+    const buckets = [['1년미만',0,12],['1~3년',12,36],['3~5년',36,60],['5~10년',60,120],['10~20년',120,240],['20년이상',240,999999]];
+    const distCounts = buckets.map(([label,lo,hi])=> generalForDist.filter(e=>{ const m=totalCareerMonths(e); return m>=lo && m<hi; }).length);
+    makeChart('chart-career-dist', {
+      type:'bar',
+      data:{ labels:buckets.map(b=>b[0]), datasets:[{label:'인원(명)', data:distCounts, backgroundColor:'#7C5CFC', borderRadius:6}] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{grid:{color:'#F1EFF9'}}} }
+    });
+  }
+
+  let rows, byRankChartLabels, byRankChartValues;
+  if(usingSheet){
+    const empByName = {};
+    emps.forEach(e=>{ if(e.name) empByName[String(e.name).trim()]=e; });
+    // 시트의 «재직자 경력 현황» 블록은 직원(CL1~4) 기준이라 임원이 포함되지 않음 — 표는 이 목록 그대로 사용
+    rows = detailed.detailRows.map(r=>{
+      const match = empByName[r.name];
+      return {
+        name: r.name,
+        division: match? match.division : '-',
+        dept: match? match.dept : '-',
+        rank: r.rank,
+        priorYears: (r.priorMonths||0)/12,
+        tenureYears: (r.tenureMonths||0)/12,
+        totalYears: (r.totalMonths!=null? r.totalMonths : ((r.priorMonths||0)+(r.tenureMonths||0)))/12
+      };
+    });
+    // CL별 평균 합산경력 차트도 표와 동일하게 임원 제외(직원만)
+    const byRank = {};
+    rows.forEach(r=>{ const k=r.rank||'(미지정)'; if(!byRank[k]) byRank[k]=[]; byRank[k].push(r.totalYears); });
+    byRankChartLabels = Object.keys(byRank).sort((a,b)=> String(a).localeCompare(String(b),'ko'));
+    byRankChartValues = byRankChartLabels.map(k=>mean(byRank[k]));
+  } else {
+    const general = emps.filter(e=>!isExecutive(e));
+    rows = general.map(e=>({ name:e.name, division:e.division, dept:e.dept, rank:e.rank,
+      priorYears: (e.priorCareerMonths||0)/12, tenureYears:(e.tenureMonths||0)/12,
+      totalYears: totalCareerMonths(e)/12 }));
+    const byRank = {};
+    general.forEach(e=>{ const k=e.rank||'(미지정)'; if(!byRank[k]) byRank[k]=[]; byRank[k].push(totalCareerMonths(e)/12); });
+    byRankChartLabels = Object.keys(byRank).sort((a,b)=> String(a).localeCompare(String(b),'ko'));
+    byRankChartValues = byRankChartLabels.map(k=>mean(byRank[k]));
+  }
+
+  makeChart('chart-career-cl', {
+    type:'bar',
+    data:{ labels:byRankChartLabels, datasets:[{label:'평균 합산경력(년)', data:byRankChartValues, backgroundColor:'#E8A33D', borderRadius:6}] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{grid:{color:'#F1EFF9'}}} }
+  });
+
+  const q = norm($('#search-career').value);
+  const filteredRows = rows.filter(r=> !q || [r.name,r.division,r.dept,r.rank].some(v=>norm(v).includes(q)));
+  $('#meta-career').textContent = `${filteredRows.length.toLocaleString('ko-KR')}건 표시`;
+  const t = ensureTable('tbl-career');
+  t.setColumns([
+    {key:'name', label:'성명'},
+    {key:'division', label:'사업부명'},
+    {key:'dept', label:'부서명'},
+    {key:'rank', label:'직급'},
+    {key:'priorYears', label:'이전경력(년)', align:'right', format:v=>v.toFixed(1)},
+    {key:'tenureYears', label:'재직기간(년)', align:'right', format:v=>v.toFixed(1)},
+    {key:'totalYears', label:'합산경력(년)', align:'right', format:v=>v.toFixed(1)}
+  ]);
+  t.setRows(filteredRows);
+}
+
+/* =============================== 내비게이션 =============================== */
+const PAGE_META = {
+  dashboard: {title:'대시보드', sub:'전체 임직원 현황 요약'},
+  headcount: {title:'인원 현황', sub:'재직자 DB · 퇴직자 DB 상세'},
+  laborcost: {title:'인건비', sub:'월별 인건비 · 매출액 · B/A 비율 추이'},
+  salary:    {title:'연봉분석', sub:'직급(CL)별 연봉 현황 및 분위 분포'},
+  career:    {title:'경력분석', sub:'합산경력(이전경력+재직기간) 구간 분포'}
+};
+function showView(name){
+  $$('.view').forEach(v=>v.classList.remove('active'));
+  const el = document.getElementById('view-'+name);
+  if(el) el.classList.add('active');
+  $$('.nav-item[data-view]').forEach(n=>n.classList.toggle('active', n.dataset.view===name));
+  const meta = PAGE_META[name];
+  if(meta){ $('#page-title').textContent = meta.title; $('#page-sub').textContent = meta.sub; }
+}
+$('#nav').addEventListener('click', (e)=>{
+  const item = e.target.closest('.nav-item');
+  if(!item) return;
+  if(item.dataset.view){ showView(item.dataset.view); }
+  if(item.dataset.action==='pick-file'){ pickFolder(); }
+  if(item.dataset.action==='refresh'){ refreshFile(); }
+});
+$$('.subtab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    $$('.subtab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    const sub = tab.dataset.sub;
+    $('#headcount-active').style.display = sub==='active' ? '' : 'none';
+    $('#headcount-resigned').style.display = sub==='resigned' ? '' : 'none';
+  });
+});
+
+/* =============================== 필터/검색 이벤트 =============================== */
+$('#f-division').addEventListener('change', e=>{ state.filters.division = e.target.value; renderAll(); });
+$('#f-month').addEventListener('change', e=>{ state.filters.month = e.target.value; renderDashboard(); renderLaborCost(); });
+$('#f-status').addEventListener('change', e=>{
+  const v = e.target.value;
+  if(v==='all') return;
+  showView('headcount');
+  $$('.subtab').forEach(t=>t.classList.toggle('active', t.dataset.sub===(v==='active'?'active':'resigned')));
+  $('#headcount-active').style.display = v==='active' ? '' : 'none';
+  $('#headcount-resigned').style.display = v==='resigned' ? '' : 'none';
+});
+['search-active','search-resigned','search-career'].forEach(id=>{
+  $('#'+id).addEventListener('input', ()=>{
+    if(id==='search-active') renderActiveEmployees();
+    if(id==='search-resigned') renderResignedEmployees();
+    if(id==='search-career') renderCareer();
+  });
+});
+
+/* =============================== 파일 입출력 (폴더 기반) =============================== */
+const supportsFSApi = 'showDirectoryPicker' in window;
+const WORKBOOK_PREFIX = '★인사관리대장';
+const IDB_NAME = 'hr_dashboard_fs';
+const IDB_STORE = 'handles';
+const IDB_KEY = 'workbook_dir';
+
+if(!supportsFSApi){
+  $('#fsapi-note').innerHTML = '현재 브라우저는 폴더 접근 기능(File System Access API)을 지원하지 않습니다. '
+    + '&laquo;새로고침&raquo;을 누르면 매번 폴더를 다시 선택하는 방식으로 동작합니다. 이 방식은 크롬·엣지(Windows/Mac)에서만 지원되며, 사파리에서는 지원되지 않습니다.';
+}
+
+/* ---- IndexedDB에 폴더 핸들 저장/조회 (FileSystemDirectoryHandle은 구조화 복제가 가능해 그대로 저장 가능) ---- */
+function idbOpen(){
+  return new Promise((resolve,reject)=>{
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = ()=>{ req.result.createObjectStore(IDB_STORE); };
+    req.onsuccess = ()=>resolve(req.result);
+    req.onerror = ()=>reject(req.error);
+  });
+}
+async function idbSet(key, val){
+  const db = await idbOpen();
+  return new Promise((resolve,reject)=>{
+    const tx = db.transaction(IDB_STORE,'readwrite');
+    tx.objectStore(IDB_STORE).put(val, key);
+    tx.oncomplete = ()=>resolve();
+    tx.onerror = ()=>reject(tx.error);
+  });
+}
+async function idbGet(key){
+  const db = await idbOpen();
+  return new Promise((resolve,reject)=>{
+    const tx = db.transaction(IDB_STORE,'readonly');
+    const req = tx.objectStore(IDB_STORE).get(key);
+    req.onsuccess = ()=>resolve(req.result);
+    req.onerror = ()=>reject(req.error);
+  });
+}
+
+// 폴백용 숨김 input (webkitdirectory로 폴더 전체 선택 — FS Access API 미지원 브라우저용)
+const fallbackInput = document.createElement('input');
+fallbackInput.type = 'file';
+fallbackInput.webkitdirectory = true;
+fallbackInput.style.display = 'none';
+document.body.appendChild(fallbackInput);
+fallbackInput.addEventListener('change', async ()=>{
+  const files = Array.from(fallbackInput.files||[]);
+  const match = pickLatestMatchingFile(files.map(f=>({name:f.name, file:f})));
+  if(!match){ alert(`선택한 폴더에서 "${WORKBOOK_PREFIX}"로 시작하는 xlsx 파일을 찾지 못했습니다.`); return; }
+  await loadFile(match.file);
+});
+
+function pickLatestMatchingFile(candidates){
+  // candidates: [{name, file}] — 이름이 접두어로 시작 + xlsx/xlsm 확장자 중 최근 수정 파일 선택
+  const filtered = candidates.filter(c=> c.name.startsWith(WORKBOOK_PREFIX) && /\.(xlsx|xlsm)$/i.test(c.name));
+  if(!filtered.length) return null;
+  filtered.sort((a,b)=> b.file.lastModified - a.file.lastModified);
+  return filtered[0];
+}
+async function findLatestWorkbookInDir(dirHandle){
+  const candidates = [];
+  for await (const [name, handle] of dirHandle.entries()){
+    if(handle.kind!=='file') continue;
+    if(!name.startsWith(WORKBOOK_PREFIX) || !/\.(xlsx|xlsm)$/i.test(name)) continue;
+    const file = await handle.getFile();
+    candidates.push({name, file});
+  }
+  candidates.sort((a,b)=> b.file.lastModified - a.file.lastModified);
+  return candidates[0] || null;
+}
+
+async function pickFolder(){
+  if(!supportsFSApi){ fallbackInput.click(); return; }
+  try{
+    const handle = await window.showDirectoryPicker({ id:'hr-workbook-folder', mode:'read', startIn:'desktop' });
+    state.dirHandle = handle;
+    idbSet(IDB_KEY, handle).catch(err=>console.warn('폴더 핸들 저장 실패(다음 방문 시 재선택 필요):', err));
+    hideReconnectBanner();
+    await loadFromFolder();
+  }catch(err){
+    if(err && err.name==='AbortError') return; // 사용자가 취소함
+    console.error(err);
+    alert('폴더를 여는 중 문제가 발생했습니다. 다시 시도해주세요.');
+  }
+}
+async function loadFromFolder(){
+  if(!state.dirHandle) return;
+  try{
+    const found = await findLatestWorkbookInDir(state.dirHandle);
+    if(!found){
+      alert(`선택한 폴더에서 "${WORKBOOK_PREFIX}"로 시작하는 xlsx 파일을 찾지 못했습니다.`);
+      return;
+    }
+    await loadFile(found.file);
+  }catch(err){
+    console.error(err);
+    alert('폴더를 읽는 중 문제가 발생했습니다.');
+  }
+}
+async function refreshFile(){
+  if(state.usingSample){ generateSampleData(); return; }
+  if(supportsFSApi && state.dirHandle){
+    try{
+      let perm = await state.dirHandle.queryPermission({mode:'read'});
+      if(perm!=='granted'){
+        perm = await state.dirHandle.requestPermission({mode:'read'});
+      }
+      if(perm!=='granted'){ alert('폴더 접근 권한이 없어 새로고침할 수 없습니다.'); return; }
+      await loadFromFolder();
+    }catch(err){
+      console.error(err);
+      alert('폴더를 다시 읽는 중 문제가 발생했습니다. 폴더 선택을 다시 진행해주세요.');
+    }
+  } else {
+    pickFolder();
+  }
+}
+async function loadFile(file){
+  if(typeof XLSX==='undefined'){
+    alert('엑셀 파서(SheetJS)를 불러오지 못했습니다. 네트워크 또는 사내 보안 정책으로 cdn.sheetjs.com 접속이 차단되었을 수 있습니다. 접속 환경을 확인한 뒤 페이지를 새로고침해주세요.');
+    return;
+  }
+  try{
+    const buf = await file.arrayBuffer();
+    await parseWorkbookFromArrayBuffer(buf, file.name);
+    if(state.missingSheets && state.missingSheets.length){
+      console.warn('다음 시트를 찾지 못했습니다:', state.missingSheets.join(', '));
+    }
+  }catch(err){
+    console.error(err);
+    alert('워크북을 읽는 중 오류가 발생했습니다. 파일 형식(.xlsx)과 시트 구성을 확인해주세요.');
+  }
+}
+
+/* ---- 저장된 폴더 재연결 배너 ---- */
+function showReconnectBanner(){
+  $('#empty-state').style.display = 'none';
+  $('#reconnect-state').style.display = '';
+}
+function hideReconnectBanner(){
+  $('#reconnect-state').style.display = 'none';
+}
+async function tryRestoreFolderOnLoad(){
+  if(!supportsFSApi) return;
+  try{
+    const handle = await idbGet(IDB_KEY);
+    if(!handle) return;
+    state.dirHandle = handle;
+    const perm = await handle.queryPermission({mode:'read'});
+    if(perm==='granted'){
+      await loadFromFolder();
+    } else {
+      showReconnectBanner();
+    }
+  }catch(err){
+    console.warn('저장된 폴더 핸들을 복원하지 못했습니다:', err);
+  }
+}
+
+$('#btn-pick').addEventListener('click', pickFolder);
+$('#btn-pick-2').addEventListener('click', pickFolder);
+$('#btn-pick-other').addEventListener('click', ()=>{ hideReconnectBanner(); pickFolder(); });
+$('#btn-reconnect').addEventListener('click', async ()=>{
+  if(!state.dirHandle) return;
+  try{
+    const perm = await state.dirHandle.requestPermission({mode:'read'});
+    if(perm!=='granted'){ alert('폴더 접근을 허용해주셔야 대시보드를 불러올 수 있습니다.'); return; }
+    hideReconnectBanner();
+    await loadFromFolder();
+  }catch(err){
+    console.error(err);
+    alert('폴더에 다시 연결하는 중 문제가 발생했습니다.');
+  }
+});
+$('#btn-refresh').addEventListener('click', refreshFile);
+$('#btn-sample').addEventListener('click', generateSampleData);
+$('#btn-sample-2').addEventListener('click', generateSampleData);
+
+/* =============================== 초기화 =============================== */
+updateFileMeta();
+showView('dashboard');
+tryRestoreFolderOnLoad();
+</script>
+</body>
+</html>
