@@ -584,6 +584,12 @@ function fmtInt(n){
   if(n==null || isNaN(n)) return '-';
   return Math.round(n).toLocaleString('ko-KR');
 }
+// 개월 수 → 'N년 M개월' (원본 워크북 표기와 동일하게 표시, 정렬은 개월 수 기준)
+function fmtYearMonth(m){
+  if(m==null || isNaN(m)) return '-';
+  const t = Math.round(m);
+  return Math.floor(t/12)+'년 '+(t%12)+'개월';
+}
 function fmtDate(d){
   if(!d) return '-';
   const dt = (d instanceof Date)? d : toDateSafe(d);
@@ -1874,21 +1880,21 @@ function renderCareer(){
         division: match? match.division : '-',
         dept: match? match.dept : '-',
         rank: r.rank,
-        priorYears: (r.priorMonths||0)/12,
-        tenureYears: (r.tenureMonths||0)/12,
-        totalYears: (r.totalMonths!=null? r.totalMonths : ((r.priorMonths||0)+(r.tenureMonths||0)))/12
+        priorMonths: r.priorMonths||0,
+        tenureMonths: r.tenureMonths||0,
+        totalMonths: r.totalMonths!=null? r.totalMonths : ((r.priorMonths||0)+(r.tenureMonths||0))
       };
     });
     // CL별 평균 합산경력 차트도 표와 동일하게 임원 제외(직원만)
     const byRank = {};
-    rows.forEach(r=>{ const k=r.rank||'(미지정)'; if(!byRank[k]) byRank[k]=[]; byRank[k].push(r.totalYears); });
+    rows.forEach(r=>{ const k=r.rank||'(미지정)'; if(!byRank[k]) byRank[k]=[]; byRank[k].push(r.totalMonths/12); });
     byRankChartLabels = Object.keys(byRank).sort((a,b)=> String(a).localeCompare(String(b),'ko'));
     byRankChartValues = byRankChartLabels.map(k=>mean(byRank[k]));
   } else {
     const general = emps.filter(e=>!isExecutive(e));
     rows = general.map(e=>({ name:e.name, division:e.division, dept:e.dept, rank:e.rank,
-      priorYears: (e.priorCareerMonths||0)/12, tenureYears:(e.tenureMonths||0)/12,
-      totalYears: totalCareerMonths(e)/12 }));
+      priorMonths: e.priorCareerMonths||0, tenureMonths: e.tenureMonths||0,
+      totalMonths: totalCareerMonths(e) }));
     const byRank = {};
     general.forEach(e=>{ const k=e.rank||'(미지정)'; if(!byRank[k]) byRank[k]=[]; byRank[k].push(totalCareerMonths(e)/12); });
     byRankChartLabels = Object.keys(byRank).sort((a,b)=> String(a).localeCompare(String(b),'ko'));
@@ -1910,9 +1916,9 @@ function renderCareer(){
     {key:'division', label:'사업부명'},
     {key:'dept', label:'부서명'},
     {key:'rank', label:'직급'},
-    {key:'priorYears', label:'이전경력(년)', align:'right', format:v=>v.toFixed(1)},
-    {key:'tenureYears', label:'재직기간(년)', align:'right', format:v=>v.toFixed(1)},
-    {key:'totalYears', label:'합산경력(년)', align:'right', format:v=>v.toFixed(1)}
+    {key:'priorMonths', label:'이전경력', align:'right', format:fmtYearMonth},
+    {key:'tenureMonths', label:'재직기간', align:'right', format:fmtYearMonth},
+    {key:'totalMonths', label:'합산경력', align:'right', format:fmtYearMonth}
   ]);
   t.setRows(filteredRows);
 }
